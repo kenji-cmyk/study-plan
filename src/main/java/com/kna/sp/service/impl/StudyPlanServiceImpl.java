@@ -48,7 +48,7 @@ public class StudyPlanServiceImpl implements StudyPlanService {
 
     @Override
     public Map<LocalDate, List<Subject>> generateSchedule(int month, int year) {
-        List<Subject> subjectList = subjectRepository.findSubjectsByActiveOrderByIdAsc();
+        List<Subject> subjectList = subjectRepository.findByActiveTrueOrderByIdAsc();
         return studyScheduleGenerator.generate(month, year, subjectList);
     }
 }
