@@ -1,13 +1,13 @@
 package com.kna.sp;
 
+import com.kna.sp.algorithm.StudyScheduleGenerator;
 import com.kna.sp.entity.Subject;
 import com.kna.sp.repository.SubjectRepository;
-import com.kna.sp.service.ScheduleGenerator;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
 
@@ -20,20 +20,15 @@ class ScheduleGeneratorTest {
     @Test
     void shouldGenerateThreeSubjectsPerDay() {
 
-        // Lấy subject từ database
-        List<Subject> subjects = subjectRepository.findAll();
+        List<Subject> subjects =
+                subjectRepository.findByActiveTrueOrderByIdAsc();
 
-        // Generator
-        ScheduleGenerator generator = new ScheduleGenerator();
+        StudyScheduleGenerator generator =
+                new StudyScheduleGenerator();
 
-        // Tháng muốn generate
-        YearMonth month = YearMonth.of(2026, 9);
-
-        // Generate schedule
         Map<LocalDate, List<Subject>> schedule =
-                generator.generate(month, subjects);
+                generator.generate(9, 2026, subjects);
 
-        // In kết quả
         schedule.forEach((date, dailySubjects) -> {
 
             System.out.println(date);
