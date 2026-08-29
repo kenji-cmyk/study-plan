@@ -1,4 +1,4 @@
-package com.kna.sp.dto;
+package com.kna.sp.dto.request;
 
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Max;

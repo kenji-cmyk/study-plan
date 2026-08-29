@@ -1,6 +1,6 @@
 package com.kna.sp.handler;
 
-import com.kna.sp.dto.ErrorResponse;
+import com.kna.sp.dto.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;

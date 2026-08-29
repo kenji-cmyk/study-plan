@@ -1,17 +1,26 @@
 package com.kna.sp.service;
 
+import com.kna.sp.dto.request.CreateSubjectRequest;
+import com.kna.sp.dto.request.UpdateSubjectRequest;
+import com.kna.sp.dto.response.SubjectResponse;
 import com.kna.sp.entity.Subject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 public interface SubjectService {
 
-    Subject createSubject(Subject subject);
+    SubjectResponse createSubject(CreateSubjectRequest request);
 
-    List<Subject> retrieveSubjects();
+    SubjectResponse updateSubject(Long id, UpdateSubjectRequest request);
 
-    Subject updateSubject(Subject subject);
+    void deleteSubject(Long id);
 
-    boolean deleteSubject(Long id);
+    Page<SubjectResponse> findAll(Pageable pageable);
+
+    SubjectResponse findById(Long id);
+
+    List<Subject> findActiveSubjectsForSchedule();
 
 }

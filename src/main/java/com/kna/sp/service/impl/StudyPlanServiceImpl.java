@@ -4,8 +4,8 @@ import com.kna.sp.algorithm.StudyScheduleGenerator;
 import com.kna.sp.entity.StudyPlan;
 import com.kna.sp.entity.Subject;
 import com.kna.sp.repository.StudyPlanRepository;
-import com.kna.sp.repository.SubjectRepository;
 import com.kna.sp.service.StudyPlanService;
+import com.kna.sp.service.SubjectService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -17,12 +17,12 @@ public class StudyPlanServiceImpl implements StudyPlanService {
 
     private final StudyPlanRepository studyPlanRepository;
     private final StudyScheduleGenerator studyScheduleGenerator;
-    private final SubjectRepository subjectRepository;
+    private final SubjectService subjectService;
 
-    public StudyPlanServiceImpl(StudyScheduleGenerator studyScheduleGenerator, StudyPlanRepository studyPlanRepository, SubjectRepository subjectRepository) {
+    public StudyPlanServiceImpl(StudyScheduleGenerator studyScheduleGenerator, StudyPlanRepository studyPlanRepository, SubjectService subjectService) {
         this.studyScheduleGenerator = studyScheduleGenerator;
         this.studyPlanRepository = studyPlanRepository;
-        this.subjectRepository = subjectRepository;
+        this.subjectService = subjectService;
     }
 
     @Override
@@ -48,7 +48,7 @@ public class StudyPlanServiceImpl implements StudyPlanService {
 
     @Override
     public Map<LocalDate, List<Subject>> generateSchedule(int month, int year) {
-        List<Subject> subjectList = subjectRepository.findByActiveTrueOrderByIdAsc();
+        List<Subject> subjectList = subjectService.findActiveSubjectsForSchedule();
         return studyScheduleGenerator.generate(month, year, subjectList);
     }
 }

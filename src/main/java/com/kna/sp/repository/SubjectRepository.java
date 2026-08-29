@@ -8,4 +8,8 @@ import java.util.List;
 public interface SubjectRepository extends JpaRepository<Subject, Long> {
 
     List<Subject> findByActiveTrueOrderByIdAsc();
+
+    boolean existsByCodeIgnoreCase(String code);
+
+    boolean exitsByCodeIgnoreCaseAndIdNot(String code, Long id);
 }

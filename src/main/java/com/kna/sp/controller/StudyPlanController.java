@@ -1,7 +1,7 @@
 package com.kna.sp.controller;
 
-import com.kna.sp.dto.GenerateScheduleRequest;
-import com.kna.sp.dto.GenerateScheduleResponse;
+import com.kna.sp.dto.request.GenerateScheduleRequest;
+import com.kna.sp.dto.response.GenerateScheduleResponse;
 import com.kna.sp.entity.Subject;
 import com.kna.sp.service.StudyPlanService;
 import jakarta.validation.Valid;
