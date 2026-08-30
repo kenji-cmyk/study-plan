@@ -9,6 +9,7 @@ import com.kna.sp.handler.exception.ResourceNotFoundException;
 import com.kna.sp.mapper.SubjectMapper;
 import com.kna.sp.repository.SubjectRepository;
 import com.kna.sp.service.SubjectService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 public class SubjectServiceImpl implements SubjectService {
 
@@ -32,11 +34,20 @@ public class SubjectServiceImpl implements SubjectService {
 
         String code = request.code().trim();
 
+        log.info("Create subject: code={}", code);
+
         if (subjectRepository.existsByCodeIgnoreCase(code)) {
             throw new ConflictException("Subject code already exist: " + code);
         }
 
-        return subjectMapper.toResponse(subjectRepository.save(subjectMapper.toSubject(request)));
+        Subject subject = subjectRepository.save(subjectMapper.toSubject(request));
+
+        log.info("Subject created: id={}, code={}",
+                subject.getId(),
+                subject.getCode()
+        );
+
+        return subjectMapper.toResponse(subject);
     }
 
     @Override
