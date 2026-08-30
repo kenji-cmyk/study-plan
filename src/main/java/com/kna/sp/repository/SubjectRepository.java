@@ -11,5 +11,5 @@ public interface SubjectRepository extends JpaRepository<Subject, Long> {
 
     boolean existsByCodeIgnoreCase(String code);
 
-    boolean exitsByCodeIgnoreCaseAndIdNot(String code, Long id);
+    boolean existsByCodeIgnoreCaseAndIdNot(String code, Long id);
 }

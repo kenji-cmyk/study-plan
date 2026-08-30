@@ -1,6 +1,6 @@
 package com.kna.sp.service.impl;
 
-import com.kna.sp.algorithm.StudyScheduleGenerator;
+import com.kna.sp.pkg.algorithm.StudyScheduleGenerator;
 import com.kna.sp.entity.StudyPlan;
 import com.kna.sp.entity.Subject;
 import com.kna.sp.repository.StudyPlanRepository;

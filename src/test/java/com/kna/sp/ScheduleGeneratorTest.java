@@ -1,6 +1,6 @@
 package com.kna.sp;
 
-import com.kna.sp.algorithm.StudyScheduleGenerator;
+import com.kna.sp.pkg.algorithm.StudyScheduleGenerator;
 import com.kna.sp.entity.Subject;
 import com.kna.sp.repository.SubjectRepository;
 import org.junit.jupiter.api.Test;

@@ -9,11 +9,12 @@ import com.kna.sp.handler.exception.ResourceNotFoundException;
 import com.kna.sp.mapper.SubjectMapper;
 import com.kna.sp.repository.SubjectRepository;
 import com.kna.sp.service.SubjectService;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 
 @Service
@@ -31,7 +32,7 @@ public class SubjectServiceImpl implements SubjectService {
 
         String code = request.code().trim();
 
-        if(subjectRepository.existsByCodeIgnoreCase(code)){
+        if (subjectRepository.existsByCodeIgnoreCase(code)) {
             throw new ConflictException("Subject code already exist: " + code);
         }
 
@@ -39,13 +40,15 @@ public class SubjectServiceImpl implements SubjectService {
     }
 
     @Override
+    @Transactional
     public SubjectResponse updateSubject(Long id, UpdateSubjectRequest request) {
         Subject subject = getEntity(id);
         String code = subject.getCode();
-        if(subjectRepository.exitsByCodeIgnoreCaseAndIdNot(code, id)){
+        if (subjectRepository.existsByCodeIgnoreCaseAndIdNot(code, id)) {
             throw new ConflictException("Subject code already exists: " + code);
         }
-        return subjectMapper.toResponse(subject);
+
+        return subjectMapper.toResponse(subjectMapper.updateSubject(subject, request));
     }
 
     @Override
@@ -71,7 +74,7 @@ public class SubjectServiceImpl implements SubjectService {
         return subjectRepository.findByActiveTrueOrderByIdAsc();
     }
 
-    private Subject getEntity(Long id){
+    private Subject getEntity(Long id) {
         return subjectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Subject", id

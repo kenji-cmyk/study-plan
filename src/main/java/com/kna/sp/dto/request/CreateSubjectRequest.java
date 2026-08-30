@@ -1,6 +1,7 @@
 package com.kna.sp.dto.request;
 
 import jakarta.validation.constraints.*;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 
