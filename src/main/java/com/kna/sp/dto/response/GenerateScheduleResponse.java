@@ -1,4 +1,4 @@
-package com.kna.sp.dto;
+package com.kna.sp.dto.response;
 
 import com.kna.sp.entity.Subject;
 

@@ -1,4 +1,4 @@
-package com.kna.sp.dto;
+package com.kna.sp.dto.request;
 
 public record StudyScheduleRequest() {
 }

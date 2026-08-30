@@ -1,4 +1,4 @@
-package com.kna.sp.dto;
+package com.kna.sp.dto.response;
 
 import java.time.LocalDateTime;
 import java.util.List;

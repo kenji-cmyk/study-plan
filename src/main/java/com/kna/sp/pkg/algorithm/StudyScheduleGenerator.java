@@ -1,4 +1,4 @@
-package com.kna.sp.algorithm;
+package com.kna.sp.pkg.algorithm;
 
 import com.kna.sp.entity.Subject;
 import org.springframework.stereotype.Component;
