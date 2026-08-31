@@ -23,7 +23,7 @@ public class SubjectMapper {
         return subject;
     }
 
-    public SubjectResponse toResponse(Subject subject) {
+    public static SubjectResponse toResponse(Subject subject) {
         return new SubjectResponse(
                 subject.getId(),
                 subject.getCode(),

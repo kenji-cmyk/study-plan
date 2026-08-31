@@ -9,8 +9,8 @@ import com.kna.sp.handler.exception.ResourceNotFoundException;
 import com.kna.sp.mapper.SubjectMapper;
 import com.kna.sp.repository.SubjectRepository;
 import com.kna.sp.service.SubjectService;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,13 +20,13 @@ import java.util.List;
 
 @Slf4j
 @Service
+@AllArgsConstructor
 public class SubjectServiceImpl implements SubjectService {
 
-    @Autowired
-    SubjectRepository subjectRepository;
 
-    @Autowired
-    SubjectMapper subjectMapper;
+    private SubjectRepository subjectRepository;
+
+    private SubjectMapper subjectMapper;
 
     @Override
     @Transactional
@@ -47,7 +47,7 @@ public class SubjectServiceImpl implements SubjectService {
                 subject.getCode()
         );
 
-        return subjectMapper.toResponse(subject);
+        return SubjectMapper.toResponse(subject);
     }
 
     @Override
@@ -65,7 +65,7 @@ public class SubjectServiceImpl implements SubjectService {
 
         log.info("Update subject: id={}, code={}", id, code);
 
-        return subjectMapper.toResponse(subjectMapper.updateSubject(subject, request));
+        return SubjectMapper.toResponse(subjectMapper.updateSubject(subject, request));
     }
 
     @Override
@@ -82,7 +82,7 @@ public class SubjectServiceImpl implements SubjectService {
 
         log.info("Find all subjects: pageable={}", pageable);
 
-        return subjectRepository.findAll(pageable).map(subjectMapper::toResponse);
+        return subjectRepository.findAll(pageable).map(SubjectMapper::toResponse);
     }
 
     @Override
@@ -93,7 +93,7 @@ public class SubjectServiceImpl implements SubjectService {
 
         log.info("Find subject: id={}", id);
 
-        return subjectMapper.toResponse(subject);
+        return SubjectMapper.toResponse(subject);
     }
 
     @Override

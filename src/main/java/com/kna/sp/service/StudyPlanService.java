@@ -1,21 +1,19 @@
 package com.kna.sp.service;
 
+import com.kna.sp.dto.response.StudyPlanResponse;
 import com.kna.sp.entity.StudyPlan;
-import com.kna.sp.entity.Subject;
 
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 public interface StudyPlanService {
 
-    StudyPlan createStudyPlan(StudyPlan studyPlan);
+    StudyPlanResponse createStudyPlan(StudyPlan studyPlan);
 
-    List<StudyPlan> retrieveStudyPlan();
+    List<StudyPlanResponse> findAll();
 
     StudyPlan updateStudyPlan(StudyPlan studyPlan);
 
     boolean deleteStudyPlan(Long id);
 
-    Map<LocalDate, List<Subject>> generateSchedule(int month, int year);
+    StudyPlanResponse preview(int month, int year);
 }
