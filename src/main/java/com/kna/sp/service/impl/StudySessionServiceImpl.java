@@ -3,16 +3,17 @@ package com.kna.sp.service.impl;
 import com.kna.sp.entity.StudySession;
 import com.kna.sp.repository.StudySessionRepository;
 import com.kna.sp.service.StudySessionService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@AllArgsConstructor
 public class StudySessionServiceImpl implements StudySessionService {
 
-    @Autowired
-    StudySessionRepository studySessionRepository;
+    private StudySessionRepository studySessionRepository;
+
 
     @Override
     public StudySession createStudySession(StudySession studySession) {

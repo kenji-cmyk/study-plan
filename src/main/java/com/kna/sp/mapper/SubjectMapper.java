@@ -9,6 +9,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class SubjectMapper {
 
+    public static SubjectResponse toResponse(Subject subject) {
+        return new SubjectResponse(
+                subject.getId(),
+                subject.getCode(),
+                subject.getName(),
+                subject.getWeight(),
+                subject.getActive()
+        );
+    }
+
     public Subject toSubject(CreateSubjectRequest request) {
 
         Subject subject = new Subject();
@@ -21,16 +31,6 @@ public class SubjectMapper {
         );
 
         return subject;
-    }
-
-    public static SubjectResponse toResponse(Subject subject) {
-        return new SubjectResponse(
-                subject.getId(),
-                subject.getCode(),
-                subject.getName(),
-                subject.getWeight(),
-                subject.getActive()
-        );
     }
 
     public Subject updateSubject(Subject subject, UpdateSubjectRequest request) {
