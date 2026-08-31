@@ -88,14 +88,13 @@ public class GlobalExceptionHandler {
             IllegalArgumentException.class,
             HttpMessageNotReadableException.class
     })
-    ResponseEntity<ApiError> handleBadRequest(
-            Exception ex,
-            HttpServletRequest request
-    ) {
+    ResponseEntity<ApiError> handleBadRequest(Exception ex, HttpServletRequest request) {
 
         HttpStatus status = HttpStatus.BAD_REQUEST;
         String code = "MALFORMED_REQUEST";
         String message = "Request is invalid";
+
+        log.warn("Bad request: {}", ex.getMessage());
 
         return response(status, code, message, List.of(), request);
     }

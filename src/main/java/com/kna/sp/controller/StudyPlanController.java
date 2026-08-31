@@ -1,8 +1,7 @@
 package com.kna.sp.controller;
 
 import com.kna.sp.dto.request.GenerateScheduleRequest;
-import com.kna.sp.dto.response.GenerateScheduleResponse;
-import com.kna.sp.entity.Subject;
+import com.kna.sp.dto.response.StudyPlanResponse;
 import com.kna.sp.service.StudyPlanService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,10 +11,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/v1/study-plan")
 @RequiredArgsConstructor
@@ -23,13 +18,11 @@ public class StudyPlanController {
 
     private final StudyPlanService studyPlanService;
 
-    @GetMapping("/generate")
-    public ResponseEntity<GenerateScheduleResponse> generateSchedule(
+    @GetMapping("/preview")
+    public ResponseEntity<StudyPlanResponse> generateSchedule(
             @Valid @ModelAttribute GenerateScheduleRequest request
     ) {
-        Map<LocalDate, List<Subject>> schedule = studyPlanService.generateSchedule(request.month(), request.year());
-
-        GenerateScheduleResponse response = new GenerateScheduleResponse(request.year(), request.month(), schedule);
+        StudyPlanResponse response = studyPlanService.preview(request.month(), request.year());
 
         return ResponseEntity.ok(response);
     }

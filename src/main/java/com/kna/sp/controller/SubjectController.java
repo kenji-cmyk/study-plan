@@ -3,7 +3,6 @@ package com.kna.sp.controller;
 import com.kna.sp.dto.request.CreateSubjectRequest;
 import com.kna.sp.dto.request.UpdateSubjectRequest;
 import com.kna.sp.dto.response.SubjectResponse;
-import com.kna.sp.repository.SubjectRepository;
 import com.kna.sp.service.SubjectService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +21,6 @@ import java.net.URI;
 public class SubjectController {
 
     private final SubjectService subjectService;
-    private final SubjectRepository subjectRepository;
 
     @PostMapping()
     public ResponseEntity<SubjectResponse> create(@Valid @RequestBody CreateSubjectRequest request) {
