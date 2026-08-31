@@ -25,33 +25,33 @@ public class SubjectController {
     private final SubjectRepository subjectRepository;
 
     @PostMapping()
-    public ResponseEntity<SubjectResponse> create(@Valid @RequestBody CreateSubjectRequest request){
+    public ResponseEntity<SubjectResponse> create(@Valid @RequestBody CreateSubjectRequest request) {
         SubjectResponse response = subjectService.createSubject(request);
         URI location = URI.create("/api/v1/subjects/" + response.id());
-        return  ResponseEntity.created(location).body(response);
+        return ResponseEntity.created(location).body(response);
     }
 
     @GetMapping
-    public Page<SubjectResponse> findAll(@PageableDefault(size = 20, sort = "id")Pageable pageable){
-        if(pageable.getPageSize() > 100){
+    public Page<SubjectResponse> findAll(@PageableDefault(size = 20, sort = "id") Pageable pageable) {
+        if (pageable.getPageSize() > 100) {
             throw new IllegalArgumentException("size must not exceed 100");
         }
         return subjectService.findAll(pageable);
     }
 
     @GetMapping("/{id}")
-    public SubjectResponse findById(@PathVariable Long id){
+    public SubjectResponse findById(@PathVariable Long id) {
         return subjectService.findById(id);
     }
 
     @PutMapping("/{id}")
-    public SubjectResponse update(@PathVariable  Long id, @Valid @RequestBody UpdateSubjectRequest request){
+    public SubjectResponse update(@PathVariable Long id, @Valid @RequestBody UpdateSubjectRequest request) {
         return subjectService.updateSubject(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id){
+    public void delete(@PathVariable Long id) {
         subjectService.deleteSubject(id);
     }
 }

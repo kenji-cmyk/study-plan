@@ -53,39 +53,59 @@ public class SubjectServiceImpl implements SubjectService {
     @Override
     @Transactional
     public SubjectResponse updateSubject(Long id, UpdateSubjectRequest request) {
+
         Subject subject = getEntity(id);
         String code = subject.getCode();
+
+        log.info("Update subject: code={}", code);
+
         if (subjectRepository.existsByCodeIgnoreCaseAndIdNot(code, id)) {
             throw new ConflictException("Subject code already exists: " + code);
         }
+
+        log.info("Update subject: id={}, code={}", id, code);
 
         return subjectMapper.toResponse(subjectMapper.updateSubject(subject, request));
     }
 
     @Override
     public void deleteSubject(Long id) {
+
+        log.info("Delete subject: id={}", id);
+
         subjectRepository.delete(getEntity(id));
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<SubjectResponse> findAll(Pageable pageable) {
+
+        log.info("Find all subjects: pageable={}", pageable);
+
         return subjectRepository.findAll(pageable).map(subjectMapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public SubjectResponse findById(Long id) {
+
         Subject subject = getEntity(id);
+
+        log.info("Find subject: id={}", id);
+
         return subjectMapper.toResponse(subject);
     }
 
     @Override
     public List<Subject> findActiveSubjectsForSchedule() {
+
+        log.info("Find active subjects for schedule");
+
         return subjectRepository.findByActiveTrueOrderByIdAsc();
     }
 
     private Subject getEntity(Long id) {
+
         return subjectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Subject", id

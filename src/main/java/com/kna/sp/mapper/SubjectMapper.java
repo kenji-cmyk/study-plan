@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SubjectMapper {
 
-    public Subject toSubject (CreateSubjectRequest request){
+    public Subject toSubject(CreateSubjectRequest request) {
 
         Subject subject = new Subject();
 
@@ -23,7 +23,7 @@ public class SubjectMapper {
         return subject;
     }
 
-    public SubjectResponse toResponse (Subject subject){
+    public SubjectResponse toResponse(Subject subject) {
         return new SubjectResponse(
                 subject.getId(),
                 subject.getCode(),
