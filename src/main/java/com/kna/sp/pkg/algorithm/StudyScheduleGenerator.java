@@ -16,7 +16,7 @@ public class StudyScheduleGenerator {
             int month,
             int year,
             List<Subject> subjectList
-    ){
+    ) {
         validateSubjects(subjectList);
 
         Map<LocalDate, List<Subject>> schedule = new HashMap<>();
@@ -24,7 +24,7 @@ public class StudyScheduleGenerator {
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
 
-        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)){
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
 
             List<Subject> shuffleSubjects = new ArrayList<>(subjectList);
 
@@ -32,14 +32,14 @@ public class StudyScheduleGenerator {
 
             List<Subject> dailySubject = shuffleSubjects.subList(0, SUBJECT_PER_DAY);
 
-            schedule.put(date,new ArrayList<>(dailySubject));
+            schedule.put(date, new ArrayList<>(dailySubject));
         }
 
         return schedule;
     }
 
-    private void validateSubjects (List<Subject> subjectList){
-        if( subjectList == null || subjectList.size() < SUBJECT_PER_DAY){
+    private void validateSubjects(List<Subject> subjectList) {
+        if (subjectList == null || subjectList.size() < SUBJECT_PER_DAY) {
             throw new IllegalArgumentException(
                     "At least 3 subjects are required"
             );
