@@ -25,7 +25,7 @@ class ScheduleGeneratorTest {
     @Test
     void shouldGenerateWeightedDistinctDailySchedules() {
         List<Subject> subjects = subjects("10", "5", "1", "1", "1");
-        Map<LocalDate, List<Subject>> schedule = generator.generate(2, 2028, subjects);
+        Map<LocalDate, List<Subject>> schedule = generator.generate(2, 2028, 3, subjects);
         Map<Long, Integer> quotas = quotaCalculator.allocate(subjects, 29, 3);
 
         Assertions.assertEquals(29, schedule.size());
@@ -43,10 +43,10 @@ class ScheduleGeneratorTest {
 
     @Test
     void shouldRejectInvalidSubjectsAndCapExtremeWeights() {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> generator.generate(2, 2028, subjects("1", "1")));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> generator.generate(2, 2028, 3, subjects("1", "1")));
         List<Subject> invalid = subjects("1", "1", "1");
         invalid.getFirst().setWeight(BigDecimal.ZERO);
-        Assertions.assertThrows(IllegalArgumentException.class, () -> generator.generate(2, 2028, invalid));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> generator.generate(2, 2028, 3, invalid));
 
         Map<Long, Integer> quotas = quotaCalculator.allocate(subjects("999.99", "0.01", "0.01", "0.01"), 28, 3);
         Assertions.assertEquals(84, quotas.values().stream().mapToInt(Integer::intValue).sum());

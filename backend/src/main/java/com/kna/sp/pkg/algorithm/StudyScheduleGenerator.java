@@ -14,7 +14,6 @@ import java.util.random.RandomGenerator;
 @Component
 public class StudyScheduleGenerator {
 
-    public static final int DEFAULT_SUBJECTS_PER_DAY = 3;
     private static final int RECENT_DAYS_TO_COMPARE = 2;
 
     private final MonthlyQuotaCalculator quotaCalculator;
@@ -30,14 +29,6 @@ public class StudyScheduleGenerator {
         this.quotaCalculator = quotaCalculator;
         this.scheduleValidator = scheduleValidator;
         this.random = random;
-    }
-
-    public Map<LocalDate, List<Subject>> generate(
-            int month,
-            int year,
-            List<Subject> subjectList
-    ) {
-        return generate(month, year, DEFAULT_SUBJECTS_PER_DAY, subjectList);
     }
 
     public Map<LocalDate, List<Subject>> generate(
