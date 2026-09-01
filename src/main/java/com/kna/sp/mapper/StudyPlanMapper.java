@@ -2,12 +2,16 @@ package com.kna.sp.mapper;
 
 import com.kna.sp.dto.response.DailyScheduleResponse;
 import com.kna.sp.dto.response.StudyPlanResponse;
+import com.kna.sp.entity.StudyPlan;
+import com.kna.sp.entity.StudySession;
 import com.kna.sp.entity.Subject;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 @Component
 public class StudyPlanMapper {
@@ -35,6 +39,32 @@ public class StudyPlanMapper {
                 firstDate.getYear(),
                 days
         );
+    }
+
+    public StudyPlanResponse toPlanResponse(StudyPlan plan, List<StudySession> sessions){
+        List<DailyScheduleResponse> days = sessions.stream()
+                .sorted(java.util.Comparator
+                        .comparing(StudySession::getStudyDate)
+                        .thenComparing(StudySession::getSlot))
+                .collect(Collectors.groupingBy(
+                        StudySession::getStudyDate,
+                        TreeMap::new,
+                        Collectors.mapping(
+                                session -> SubjectMapper.toResponse(session.getSubject()),
+                                Collectors.toList()
+                        )
+                ))
+                .entrySet()
+                .stream()
+                .map(entry -> new DailyScheduleResponse(
+                        entry.getKey(),
+                        entry.getValue()
+                ))
+                .toList();
+        int year = plan.getYear();
+        int month = plan.getMonth();
+
+        return new StudyPlanResponse(month, year, days);
     }
 
 }

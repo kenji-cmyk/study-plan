@@ -60,6 +60,23 @@ class ScheduleGeneratorTest {
         Assertions.assertEquals(schedule.size(), uniqueCombinations);
     }
 
+    @Test
+    void shouldHonorRequestedSubjectsPerDay() {
+        List<Subject> subjects = subjects("5", "4", "3", "2", "1");
+
+        Map<LocalDate, List<Subject>> schedule = generator.generate(2, 2028, 4, subjects);
+        Map<Long, Integer> quotas = quotaCalculator.allocate(subjects, 29, 4);
+
+        schedule.values().forEach(day -> {
+            Assertions.assertEquals(4, day.size());
+            Assertions.assertEquals(4, day.stream().map(Subject::getId).distinct().count());
+        });
+        Map<Long, Long> counts = schedule.values().stream()
+                .flatMap(List::stream)
+                .collect(Collectors.groupingBy(Subject::getId, Collectors.counting()));
+        quotas.forEach((id, quota) -> Assertions.assertEquals(quota.longValue(), counts.getOrDefault(id, 0L)));
+    }
+
     private List<Subject> subjects(String... weights) {
         return java.util.stream.IntStream.range(0, weights.length).mapToObj(index -> {
             Subject subject = new Subject();
