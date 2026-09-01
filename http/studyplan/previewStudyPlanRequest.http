@@ -1,0 +1,4 @@
+### Preview Study Plan
+GET http://localhost:8080/api/v1/study-plan/preview?month=10&year=2026
+Authorization: Basic user password
+Content-Type: application/json

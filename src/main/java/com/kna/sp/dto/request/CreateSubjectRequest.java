@@ -14,7 +14,7 @@ public record CreateSubjectRequest(
         String name,
 
         @NotNull(message = "Subject weight is required")
-        @DecimalMin(value = "0.001", message = "Subject weight is must greater than 0")
+        @DecimalMin(value = "0.01", message = "Subject weight must be at least 0.01")
         @Digits(integer = 3, fraction = 2, message = "Weight format is not valid")
         BigDecimal weight,
 

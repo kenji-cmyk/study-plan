@@ -15,18 +15,19 @@ public class StudyPlanMapper {
     public StudyPlanResponse toStudyPlanResponse(
             Map<LocalDate, List<Subject>> schedule
     ) {
-        List<DailyScheduleResponse> days = schedule.entrySet().stream().map(
-                entry -> new DailyScheduleResponse(
-                        entry.getKey(),
-                        entry.getValue().stream().map(
-                                SubjectMapper::toResponse
-                        ).toList()
-                )
+        List<DailyScheduleResponse> days = schedule.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey()).map(
+                        entry -> new DailyScheduleResponse(
+                                entry.getKey(),
+                                entry.getValue().stream().map(
+                                        SubjectMapper::toResponse
+                                ).toList()
+                        )
 
-        ).toList();
+                ).toList();
 
         LocalDate firstDate = schedule.keySet().stream()
-                .findFirst()
+                .min(LocalDate::compareTo)
                 .orElseThrow();
 
         return new StudyPlanResponse(
