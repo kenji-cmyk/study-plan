@@ -55,7 +55,7 @@ class ScheduleGeneratorTest {
 
     @Test
     void shouldAvoidDuplicateCombinationsWhenEnoughCombinationsExist() {
-        Map<LocalDate, List<Subject>> schedule = generator.generate(2, 2028, subjects("1", "1", "1", "1", "1", "1", "1", "1"));
+        Map<LocalDate, List<Subject>> schedule = generator.generate(2, 2028, 3, subjects("1", "1", "1", "1", "1", "1", "1", "1"));
         long uniqueCombinations = schedule.values().stream().map(DaySignature::of).distinct().count();
         Assertions.assertEquals(schedule.size(), uniqueCombinations);
     }
