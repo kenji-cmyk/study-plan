@@ -16,5 +16,5 @@ public interface StudyPlanService {
 
     boolean deleteStudyPlan(Long id);
 
-    StudyPlanResponse preview(int month, int year);
+    StudyPlanResponse preview(int month, int year, int subjectsPerDay);
 }

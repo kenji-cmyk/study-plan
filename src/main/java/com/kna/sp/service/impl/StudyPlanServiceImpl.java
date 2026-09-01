@@ -93,7 +93,7 @@ public class StudyPlanServiceImpl implements StudyPlanService {
 
     @Override
     @Transactional(readOnly = true)
-    public StudyPlanResponse preview(int month, int year) {
+    public StudyPlanResponse preview(int month, int year, int subjectsPerDay) {
 
         log.info("Preview study plan: month={}, year={}", month, year);
 
@@ -102,7 +102,7 @@ public class StudyPlanServiceImpl implements StudyPlanService {
         log.debug("Found {} active subjects for schedule", subjectList.size());
 
         Map<LocalDate, List<Subject>> schedule =
-                studyScheduleGenerator.generate(month, year, subjectList);
+                studyScheduleGenerator.generate(month, year, subjectsPerDay, subjectList);
 
         log.info(
                 "Study plan generated successfully: month={}, year={}, days={}, subjects={}",
