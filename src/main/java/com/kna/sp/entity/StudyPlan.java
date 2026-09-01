@@ -11,7 +11,13 @@ import java.time.Instant;
 @Getter
 @Setter
 @Entity
-@Table(name = "study_plans")
+@Table(
+        name = "study_plans",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uq_study_plans_year_month",
+                columnNames = {"year", "month"}
+        )
+)
 public class StudyPlan {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

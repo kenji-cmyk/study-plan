@@ -1,0 +1,10 @@
+### Create Study Plan
+POST http://localhost:8080/api/v1/study-plan
+Authorization: Basic user password
+Content-Type: application/json
+
+{
+  "year": 2026,
+  "month": 10,
+  "slotsPerDay" : 3
+}

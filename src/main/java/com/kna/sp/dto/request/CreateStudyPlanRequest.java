@@ -8,8 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.YearMonth;
 
-public record GenerateScheduleRequest(
-
+public record CreateStudyPlanRequest(
         @NotNull(message = "Year is required")
         @Min(value = 1, message = "Year must be a positive number")
         Integer year,
@@ -17,9 +16,13 @@ public record GenerateScheduleRequest(
         @NotNull(message = "Month is required")
         @Min(value = 1, message = "Month must be between 1 and 12")
         @Max(value = 12, message = "Month must be between 1 and 12")
-        Integer month
-) {
+        Integer month,
 
+        @NotNull(message = "Slots per day is required")
+        @Min(value = 1, message = "Slots per day must be between 1 and 10")
+        @Max(value = 10, message = "Slots per day must be between 1 and 10")
+        Integer slotsPerDay
+) {
     @AssertTrue(message = "Year must be greater than or equal to current year")
     public boolean isYearValid() {
 

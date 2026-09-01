@@ -39,5 +39,8 @@ public class StudySession {
     @Column(name = "completed", nullable = false)
     private Boolean completed;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "subject_id", nullable = false)
+    private Subject subject;
 
 }

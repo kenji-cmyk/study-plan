@@ -1,5 +1,6 @@
 package com.kna.sp.service;
 
+import com.kna.sp.dto.request.CreateStudyPlanRequest;
 import com.kna.sp.dto.response.StudyPlanResponse;
 import com.kna.sp.entity.StudyPlan;
 
@@ -7,7 +8,7 @@ import java.util.List;
 
 public interface StudyPlanService {
 
-    StudyPlanResponse createStudyPlan(StudyPlan studyPlan);
+    StudyPlanResponse createStudyPlan( CreateStudyPlanRequest request);
 
     List<StudyPlanResponse> findAll();
 
@@ -15,5 +16,5 @@ public interface StudyPlanService {
 
     boolean deleteStudyPlan(Long id);
 
-    StudyPlanResponse preview(int month, int year);
+    StudyPlanResponse preview(int month, int year, int subjectsPerDay);
 }

@@ -14,7 +14,7 @@ import java.util.random.RandomGenerator;
 @Component
 public class StudyScheduleGenerator {
 
-    private static final int SUBJECTS_PER_DAY = 3;
+    public static final int DEFAULT_SUBJECTS_PER_DAY = 3;
     private static final int RECENT_DAYS_TO_COMPARE = 2;
 
     private final MonthlyQuotaCalculator quotaCalculator;
@@ -37,10 +37,19 @@ public class StudyScheduleGenerator {
             int year,
             List<Subject> subjectList
     ) {
-        validateSubjects(subjectList);
+        return generate(month, year, DEFAULT_SUBJECTS_PER_DAY, subjectList);
+    }
+
+    public Map<LocalDate, List<Subject>> generate(
+            int month,
+            int year,
+            int subjectsPerDay,
+            List<Subject> subjectList
+    ) {
+        validateSubjects(subjectList, subjectsPerDay);
 
         YearMonth yearMonth = YearMonth.of(year, month);
-        Map<Long, Integer> quotas = quotaCalculator.allocate(subjectList, yearMonth.lengthOfMonth(), SUBJECTS_PER_DAY);
+        Map<Long, Integer> quotas = quotaCalculator.allocate(subjectList, yearMonth.lengthOfMonth(), subjectsPerDay);
         Map<Long, SubjectState> states = new HashMap<>();
         subjectList.forEach(subject -> states.put(subject.getId(), new SubjectState(subject, quotas.get(subject.getId()))));
         Map<LocalDate, List<Subject>> schedule = new LinkedHashMap<>();
@@ -49,7 +58,12 @@ public class StudyScheduleGenerator {
 
         for (LocalDate date = yearMonth.atDay(1); !date.isAfter(yearMonth.atEndOfMonth()); date = date.plusDays(1)) {
             int daysAfter = (int) (yearMonth.atEndOfMonth().toEpochDay() - date.toEpochDay());
-            DailyCandidate selected = selectCandidate(buildCandidates(states.values(), daysAfter), usedSignatures, recentDays, date);
+            DailyCandidate selected = selectCandidate(
+                    buildCandidates(states.values(), daysAfter, subjectsPerDay),
+                    usedSignatures,
+                    recentDays,
+                    date
+            );
             List<Subject> dailySubjects = selected.states().stream().map(SubjectState::subject).toList();
             schedule.put(date, dailySubjects);
             LocalDate scheduledDate = date;
@@ -58,13 +72,16 @@ public class StudyScheduleGenerator {
             recentDays.addFirst(selected.subjectIds());
             if (recentDays.size() > RECENT_DAYS_TO_COMPARE) recentDays.removeLast();
         }
-        scheduleValidator.validate(schedule, quotas, yearMonth, SUBJECTS_PER_DAY);
+        scheduleValidator.validate(schedule, quotas, yearMonth, subjectsPerDay);
         return schedule;
     }
 
-    private void validateSubjects(List<Subject> subjectList) {
-        if (subjectList == null || subjectList.size() < SUBJECTS_PER_DAY) {
-            throw new IllegalArgumentException("At least " + SUBJECTS_PER_DAY + " subjects are required");
+    private void validateSubjects(List<Subject> subjectList, int subjectsPerDay) {
+        if (subjectsPerDay < 1) {
+            throw new IllegalArgumentException("Subjects per day must be positive");
+        }
+        if (subjectList == null || subjectList.size() < subjectsPerDay) {
+            throw new IllegalArgumentException("At least " + subjectsPerDay + " subjects are required");
         }
         Set<Long> ids = new HashSet<>();
         for (Subject subject : subjectList) {
@@ -74,25 +91,26 @@ public class StudyScheduleGenerator {
         }
     }
 
-    private List<DailyCandidate> buildCandidates(Collection<SubjectState> states, int daysAfter) {
+    private List<DailyCandidate> buildCandidates(Collection<SubjectState> states, int daysAfter, int subjectsPerDay) {
         List<SubjectState> eligible = states.stream().filter(state -> state.remainingQuota() > 0)
                 .sorted(Comparator.comparing(state -> state.subject().getId())).toList();
         List<DailyCandidate> candidates = new ArrayList<>();
-        buildCombinations(eligible, 0, new ArrayList<>(), candidates, states, daysAfter);
+        buildCombinations(eligible, 0, new ArrayList<>(), candidates, states, daysAfter, subjectsPerDay);
         if (candidates.isEmpty()) throw new IllegalStateException("No quota-feasible daily schedule is available");
         return candidates;
     }
 
     private void buildCombinations(List<SubjectState> eligible, int index, List<SubjectState> selected,
-                                   List<DailyCandidate> candidates, Collection<SubjectState> allStates, int daysAfter) {
-        if (selected.size() == SUBJECTS_PER_DAY) {
+                                   List<DailyCandidate> candidates, Collection<SubjectState> allStates, int daysAfter,
+                                   int subjectsPerDay) {
+        if (selected.size() == subjectsPerDay) {
             if (preservesFutureFeasibility(selected, allStates, daysAfter))
                 candidates.add(new DailyCandidate(List.copyOf(selected)));
             return;
         }
-        for (int current = index; current <= eligible.size() - (SUBJECTS_PER_DAY - selected.size()); current++) {
+        for (int current = index; current <= eligible.size() - (subjectsPerDay - selected.size()); current++) {
             selected.add(eligible.get(current));
-            buildCombinations(eligible, current + 1, selected, candidates, allStates, daysAfter);
+            buildCombinations(eligible, current + 1, selected, candidates, allStates, daysAfter, subjectsPerDay);
             selected.removeLast();
         }
     }
