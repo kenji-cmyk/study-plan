@@ -30,11 +30,15 @@ public class SubjectController {
     }
 
     @GetMapping
-    public Page<SubjectResponse> findAll(@PageableDefault(size = 20, sort = "id") Pageable pageable) {
+    public Page<SubjectResponse> findAll(
+            @RequestParam(required = false) String code,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Boolean active,
+            @PageableDefault(size = 20, sort = "id") Pageable pageable) {
         if (pageable.getPageSize() > 100) {
             throw new IllegalArgumentException("size must not exceed 100");
         }
-        return subjectService.findAll(pageable);
+        return subjectService.findAll(code, name, active, pageable);
     }
 
     @GetMapping("/{id}")

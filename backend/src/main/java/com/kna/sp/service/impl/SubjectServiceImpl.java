@@ -9,6 +9,7 @@ import com.kna.sp.handler.exception.ResourceNotFoundException;
 import com.kna.sp.mapper.SubjectMapper;
 import com.kna.sp.repository.SubjectRepository;
 import com.kna.sp.service.SubjectService;
+import com.kna.sp.specification.SubjectSpecification;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -55,7 +56,7 @@ public class SubjectServiceImpl implements SubjectService {
     public SubjectResponse updateSubject(Long id, UpdateSubjectRequest request) {
 
         Subject subject = getEntity(id);
-        String code = subject.getCode();
+        String code = request.code().trim();
 
         log.info("Update subject: code={}", code);
 
@@ -78,11 +79,12 @@ public class SubjectServiceImpl implements SubjectService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<SubjectResponse> findAll(Pageable pageable) {
+    public Page<SubjectResponse> findAll(String code, String name, Boolean active, Pageable pageable) {
 
         log.info("Find all subjects: pageable={}", pageable);
 
-        return subjectRepository.findAll(pageable).map(SubjectMapper::toResponse);
+        return subjectRepository.findAll(SubjectSpecification.withFilters(code, name, active), pageable)
+                .map(SubjectMapper::toResponse);
     }
 
     @Override

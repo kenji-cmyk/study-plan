@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 
@@ -13,6 +15,8 @@ import java.math.BigDecimal;
 @Setter
 @Entity
 @Table(name = "subjects")
+@SQLDelete(sql = "UPDATE subjects SET deleted = 1 WHERE id = ?")
+@SQLRestriction("deleted = false")
 public class Subject {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,5 +43,9 @@ public class Subject {
     @Column(name = "active", nullable = false)
     private Boolean active;
 
+    @NotNull
+    @ColumnDefault("0")
+    @Column(name = "deleted", nullable = false)
+    private Boolean deleted = false;
 
 }

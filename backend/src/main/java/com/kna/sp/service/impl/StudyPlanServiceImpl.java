@@ -6,6 +6,7 @@ import com.kna.sp.entity.StudyPlan;
 import com.kna.sp.entity.StudySession;
 import com.kna.sp.entity.Subject;
 import com.kna.sp.handler.exception.ConflictException;
+import com.kna.sp.handler.exception.ResourceNotFoundException;
 import com.kna.sp.mapper.SessionMapper;
 import com.kna.sp.mapper.StudyPlanMapper;
 import com.kna.sp.pkg.algorithm.StudyScheduleGenerator;
@@ -13,12 +14,14 @@ import com.kna.sp.repository.StudyPlanRepository;
 import com.kna.sp.repository.StudySessionRepository;
 import com.kna.sp.service.StudyPlanService;
 import com.kna.sp.service.SubjectService;
+import com.kna.sp.specification.StudyPlanSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +56,7 @@ public class StudyPlanServiceImpl implements StudyPlanService {
                 subjects
         );
 
-        StudyPlan plan = studyPlanRepository.save(newStudyPlan(request));
+        StudyPlan plan = studyPlanRepository.save(studyPlanMapper.toStudyPlan(request));
 
         List<StudySession> sessions = SessionMapper.toSessions(plan, schedule);
         studySessionRepository.saveAll(sessions);
@@ -64,31 +67,26 @@ public class StudyPlanServiceImpl implements StudyPlanService {
                 sessions.size()
         );
 
-        return studyPlanMapper.toPlanResponse(plan, sessions);
-    }
-
-    private StudyPlan newStudyPlan(CreateStudyPlanRequest request) {
-        StudyPlan plan = new StudyPlan();
-        plan.setYear(request.year());
-        plan.setMonth(request.month());
-        plan.setCreatedAt(Instant.now());
-        return plan;
+        return studyPlanMapper.toResponse(plan, sessions);
     }
 
 
+    @Transactional(readOnly = true)
     @Override
-    public List<StudyPlanResponse> findAll() {
-        return List.of();
-    }
+    public Page<StudyPlanResponse> findAll(
+            Integer year, Integer month, LocalDate fromDate, LocalDate toDate, Long subjectId, Pageable pageable) {
 
-    @Override
-    public StudyPlan updateStudyPlan(StudyPlan studyPlan) {
-        return null;
+        log.info("Find all study plan: pageable={}", pageable);
+
+        return studyPlanRepository.findAll(
+                StudyPlanSpecification.withFilters(year, month, fromDate, toDate, subjectId), pageable)
+                .map(studyPlanMapper::toResponse);
     }
 
     @Override
-    public boolean deleteStudyPlan(Long id) {
-        return false;
+    @Transactional
+    public void deleteStudyPlan(Long id) {
+        studyPlanRepository.delete(getEntity(id));
     }
 
     @Override
@@ -113,5 +111,16 @@ public class StudyPlanServiceImpl implements StudyPlanService {
         );
 
         return studyPlanMapper.toStudyPlanResponse(schedule);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StudyPlanResponse findById(Long id) {
+        return studyPlanMapper.toResponse(getEntity(id));
+    }
+
+    private StudyPlan getEntity(Long id) {
+        return studyPlanRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Study plan", id));
     }
 }
