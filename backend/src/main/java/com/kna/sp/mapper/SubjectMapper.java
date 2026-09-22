@@ -23,7 +23,7 @@ public class SubjectMapper {
 
         Subject subject = new Subject();
 
-        subject.setCode(request.code());
+        subject.setCode(request.code().trim());
         subject.setName(request.name().trim());
         subject.setWeight(request.weight());
         subject.setActive(
@@ -34,7 +34,7 @@ public class SubjectMapper {
     }
 
     public Subject updateSubject(Subject subject, UpdateSubjectRequest request) {
-        subject.setCode(request.code());
+        subject.setCode(request.code().trim());
         subject.setName(request.name().trim());
         subject.setWeight(request.weight());
 

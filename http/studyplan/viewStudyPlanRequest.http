@@ -1,0 +1,4 @@
+### View Study Plan
+GET http://localhost:8080/api/v1/study-plan
+Authorization: Basic user
+Content-Type: application/json

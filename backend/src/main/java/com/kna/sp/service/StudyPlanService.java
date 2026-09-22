@@ -2,19 +2,21 @@ package com.kna.sp.service;
 
 import com.kna.sp.dto.request.CreateStudyPlanRequest;
 import com.kna.sp.dto.response.StudyPlanResponse;
-import com.kna.sp.entity.StudyPlan;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
+import java.time.LocalDate;
 
 public interface StudyPlanService {
 
-    StudyPlanResponse createStudyPlan( CreateStudyPlanRequest request);
+    StudyPlanResponse createStudyPlan(CreateStudyPlanRequest request);
 
-    List<StudyPlanResponse> findAll();
+    Page<StudyPlanResponse> findAll(
+            Integer year, Integer month, LocalDate fromDate, LocalDate toDate, Long subjectId, Pageable pageable);
 
-    StudyPlan updateStudyPlan(StudyPlan studyPlan);
-
-    boolean deleteStudyPlan(Long id);
+    void deleteStudyPlan(Long id);
 
     StudyPlanResponse preview(int month, int year, int subjectsPerDay);
+
+    StudyPlanResponse findById(Long id);
 }

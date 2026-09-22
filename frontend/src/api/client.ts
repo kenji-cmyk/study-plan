@@ -12,7 +12,7 @@ export const getStoredSettings = (): ApiSettings => {
     }
   }
   return {
-    baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+    baseUrl: import.meta.env.VITE_API_BASE_URL || '',
     basicAuthUser: import.meta.env.VITE_BASIC_AUTH_USER || 'admin',
     basicAuthPass: import.meta.env.VITE_BASIC_AUTH_PASS || 'admin',
   };

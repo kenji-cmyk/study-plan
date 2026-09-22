@@ -1,18 +1,21 @@
 package com.kna.sp.service;
 
-import com.kna.sp.entity.StudySession;
+import com.kna.sp.dto.response.KpiSummaryResponse;
+import com.kna.sp.dto.response.StudySessionResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
+import java.time.LocalDate;
 
 public interface StudySessionService {
 
-    StudySession createStudySession(StudySession studySession);
+    Page<StudySessionResponse> findAll(
+            Long studyPlanId, LocalDate fromDate, LocalDate toDate,
+            Boolean completed, Long subjectId, Pageable pageable);
 
-    List<StudySession> retrieveStudySession();
+    StudySessionResponse findById(Long id);
 
-    StudySession updateStudySession(StudySession studySession);
+    KpiSummaryResponse complete(Long id);
 
-    boolean deleteStudySession(Long id);
-
-
+    void delete(Long id);
 }

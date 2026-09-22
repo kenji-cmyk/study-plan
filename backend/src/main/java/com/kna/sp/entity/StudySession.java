@@ -7,6 +7,8 @@ import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDate;
 
@@ -14,6 +16,8 @@ import java.time.LocalDate;
 @Setter
 @Entity
 @Table(name = "study_sessions")
+@SQLDelete(sql = "UPDATE study_sessions SET deleted = 1 WHERE id = ?")
+@SQLRestriction("deleted = false")
 public class StudySession {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,5 +46,10 @@ public class StudySession {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "subject_id", nullable = false)
     private Subject subject;
+
+    @NotNull
+    @ColumnDefault("0")
+    @Column(name = "deleted", nullable = false)
+    private Boolean deleted = false;
 
 }

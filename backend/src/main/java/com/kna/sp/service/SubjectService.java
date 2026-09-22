@@ -17,7 +17,7 @@ public interface SubjectService {
 
     void deleteSubject(Long id);
 
-    Page<SubjectResponse> findAll(Pageable pageable);
+    Page<SubjectResponse> findAll(String code, String name, Boolean active, Pageable pageable);
 
     SubjectResponse findById(Long id);
 
