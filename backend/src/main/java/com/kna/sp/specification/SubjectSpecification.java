@@ -11,13 +11,14 @@ public final class SubjectSpecification {
         return Specification.<Subject>allOf(
                 containsIgnoreCase("code", code),
                 containsIgnoreCase("name", name),
-                active == null ? null : (root, query, cb) -> cb.equal(root.get("active"), active)
+                active == null ? Specification.unrestricted()
+                        : (root, query, cb) -> cb.equal(root.get("active"), active)
         );
     }
 
     private static Specification<Subject> containsIgnoreCase(String field, String value) {
         if (value == null || value.isBlank()) {
-            return null;
+            return Specification.unrestricted();
         }
         String pattern = "%" + value.trim().toLowerCase() + "%";
         return (root, query, cb) -> cb.like(cb.lower(root.get(field)), pattern);

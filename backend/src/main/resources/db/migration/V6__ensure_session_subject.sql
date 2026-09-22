@@ -6,11 +6,15 @@ BEGIN
     ALTER TABLE study_sessions ADD subject_id BIGINT NOT NULL;
 END;
 
+GO
+
 IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'fk_study_sessions_subject')
 BEGIN
     ALTER TABLE study_sessions ADD CONSTRAINT fk_study_sessions_subject
         FOREIGN KEY (subject_id) REFERENCES subjects(id);
 END;
+
+GO
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ix_study_sessions_subject_id')
     CREATE INDEX ix_study_sessions_subject_id ON study_sessions(subject_id);
