@@ -48,6 +48,13 @@ export interface CreateStudyPlanRequest {
   slotsPerDay: number;
 }
 
+export interface PlanPage {
+  content: StudyPlan[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+}
+
 export interface FieldError {
   field: string;
   message: string;

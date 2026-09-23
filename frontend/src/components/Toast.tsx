@@ -1,9 +1,9 @@
-import React, { useEffect } from 'react';
-import { AlertCircle, CheckCircle, Info, X } from 'lucide-react';
+import React, { useEffect } from "react";
+import { AlertCircle, CheckCircle, Info, X } from "lucide-react";
 
 export interface ToastMessage {
   id: string;
-  type: 'success' | 'error' | 'info' | 'warning';
+  type: "success" | "error" | "info" | "warning";
   title?: string;
   message: string;
 }
@@ -18,7 +18,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
     if (!toast) return;
     const timer = setTimeout(() => {
       onDismiss();
-    }, 4000);
+    }, 8000);
     return () => clearTimeout(timer);
   }, [toast, onDismiss]);
 
@@ -26,11 +26,11 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
 
   const getIcon = () => {
     switch (toast.type) {
-      case 'success':
+      case "success":
         return <CheckCircle size={20} color="#10B981" />;
-      case 'error':
+      case "error":
         return <AlertCircle size={20} color="#D94B4B" />;
-      case 'warning':
+      case "warning":
         return <AlertCircle size={20} color="#F59E0B" />;
       default:
         return <Info size={20} color="#0393F4" />;
@@ -38,13 +38,22 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
   };
 
   return (
-    <div className={`toast-banner toast-${toast.type}`} id="toast-banner">
+    <div
+      className={`toast-banner toast-${toast.type}`}
+      id="toast-banner"
+      role={toast.type === "error" ? "alert" : "status"}
+    >
       <div className="toast-icon">{getIcon()}</div>
       <div className="toast-body">
         {toast.title && <h4 className="toast-title">{toast.title}</h4>}
         <p className="toast-message">{toast.message}</p>
       </div>
-      <button className="btn-icon" onClick={onDismiss} id="toast-dismiss">
+      <button
+        className="btn-icon"
+        onClick={onDismiss}
+        id="toast-dismiss"
+        aria-label="Dismiss notification"
+      >
         <X size={16} />
       </button>
 

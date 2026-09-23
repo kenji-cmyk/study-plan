@@ -1,6 +1,6 @@
-import type { ApiError, ApiSettings } from '../types/studyPlanner';
+import type { ApiError, ApiSettings } from "../types/studyPlanner";
 
-const DEFAULT_SETTINGS_KEY = 'study_planner_api_settings';
+const DEFAULT_SETTINGS_KEY = "study_planner_api_settings";
 
 export const getStoredSettings = (): ApiSettings => {
   const stored = localStorage.getItem(DEFAULT_SETTINGS_KEY);
@@ -12,9 +12,9 @@ export const getStoredSettings = (): ApiSettings => {
     }
   }
   return {
-    baseUrl: import.meta.env.VITE_API_BASE_URL || '',
-    basicAuthUser: import.meta.env.VITE_BASIC_AUTH_USER || 'admin',
-    basicAuthPass: import.meta.env.VITE_BASIC_AUTH_PASS || 'admin',
+    baseUrl: import.meta.env.VITE_API_BASE_URL || "",
+    basicAuthUser: import.meta.env.VITE_BASIC_AUTH_USER || "admin",
+    basicAuthPass: import.meta.env.VITE_BASIC_AUTH_PASS || "admin",
   };
 };
 
@@ -26,26 +26,31 @@ export class NormalizedApiError extends Error {
   apiError: ApiError;
 
   constructor(apiError: ApiError) {
-    super(apiError.message || 'API request failed');
-    this.name = 'NormalizedApiError';
+    super(apiError.message || "API request failed");
+    this.name = "NormalizedApiError";
     this.apiError = apiError;
   }
 }
 
-export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+export async function apiFetch<T>(
+  path: string,
+  options: RequestInit = {},
+): Promise<T> {
   const settings = getStoredSettings();
-  const url = path.startsWith('http') ? path : `${settings.baseUrl}${path}`;
+  const url = path.startsWith("http") ? path : `${settings.baseUrl}${path}`;
 
   const headers = new Headers(options.headers || {});
-  
+
   if (options.body && !(options.body instanceof FormData)) {
-    headers.set('Content-Type', 'application/json');
+    headers.set("Content-Type", "application/json");
   }
 
   // Attach Basic Auth header
   if (settings.basicAuthUser || settings.basicAuthPass) {
-    const credentials = btoa(`${settings.basicAuthUser}:${settings.basicAuthPass}`);
-    headers.set('Authorization', `Basic ${credentials}`);
+    const credentials = btoa(
+      `${settings.basicAuthUser}:${settings.basicAuthPass}`,
+    );
+    headers.set("Authorization", `Basic ${credentials}`);
   }
 
   let response: Response;
@@ -54,11 +59,12 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
       ...options,
       headers,
     });
-  } catch (error) {
+  } catch {
     // Network failure
     throw new NormalizedApiError({
-      code: 'NETWORK_ERROR',
-      message: 'Unable to reach the server. Please check your network connection and API base URL.',
+      code: "NETWORK_ERROR",
+      message:
+        "Unable to reach the server. Please check your network connection and API base URL.",
       errors: [],
       status: 0,
       requestURI: path,
@@ -72,8 +78,8 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   }
 
   let responseData: any;
-  const contentType = response.headers.get('content-type');
-  if (contentType && contentType.includes('application/json')) {
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
     try {
       responseData = await response.json();
     } catch {
@@ -84,12 +90,17 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   if (!response.ok) {
     let normalizedError: ApiError;
 
-    if (responseData && typeof responseData === 'object' && 'code' in responseData) {
+    if (
+      responseData &&
+      typeof responseData === "object" &&
+      "code" in responseData
+    ) {
       normalizedError = responseData as ApiError;
     } else if (response.status === 401) {
       normalizedError = {
-        code: 'UNAUTHORIZED',
-        message: 'Authentication failed. Please verify your username and password in Settings.',
+        code: "UNAUTHORIZED",
+        message:
+          "Authentication failed. Please verify your username and password in Settings.",
         errors: [],
         status: 401,
         requestURI: path,
@@ -97,8 +108,8 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
       };
     } else if (response.status === 404) {
       normalizedError = {
-        code: 'RESOURCE_NOT_FOUND',
-        message: 'The requested resource was not found.',
+        code: "RESOURCE_NOT_FOUND",
+        message: "The requested resource was not found.",
         errors: [],
         status: 404,
         requestURI: path,
@@ -106,8 +117,8 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
       };
     } else if (response.status === 409) {
       normalizedError = {
-        code: 'CONFLICT',
-        message: responseData?.message || 'A resource conflict occurred.',
+        code: "CONFLICT",
+        message: responseData?.message || "A resource conflict occurred.",
         errors: [],
         status: 409,
         requestURI: path,
@@ -115,10 +126,14 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
       };
     } else {
       normalizedError = {
-        code: response.status >= 500 ? 'INTERNAL_SERVER_ERROR' : 'MALFORMED_REQUEST',
-        message: response.status >= 500
-          ? 'Internal server error occurred. Please retry later.'
-          : 'Request is invalid.',
+        code:
+          response.status >= 500
+            ? "INTERNAL_SERVER_ERROR"
+            : "MALFORMED_REQUEST",
+        message:
+          response.status >= 500
+            ? "Internal server error occurred. Please retry later."
+            : "Request is invalid.",
         errors: [],
         status: response.status,
         requestURI: path,

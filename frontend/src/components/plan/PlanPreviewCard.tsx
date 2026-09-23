@@ -1,258 +1,248 @@
-import React from 'react';
-import { Clock, Sparkles } from 'lucide-react';
-import type { StudyPlan } from '../../types/studyPlanner';
+import { localDate, monthName } from "../../utils/dates";
+import { useId, useMemo, useState } from "react";
+import {
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  List,
+  Search,
+} from "lucide-react";
+import type { DailySchedule, StudyPlan } from "../../types/studyPlanner";
+import { EmptyState } from "../ui";
 
-interface PlanPreviewCardProps {
-  plan: StudyPlan;
-  isSaved?: boolean;
+function DaySchedule({ day }: { day: DailySchedule }) {
+  const date = localDate(day.date);
+  return (
+    <article className="day-card">
+      <header className="day-card-header">
+        <div className="date-badge">
+          <strong>{date.getDate()}</strong>
+          <span>{date.toLocaleDateString("en", { weekday: "short" })}</span>
+        </div>
+        <div>
+          <h3>
+            {date.toLocaleDateString("en", { month: "long", day: "numeric" })}
+          </h3>
+          <p>
+            {day.slots.length} {day.slots.length === 1 ? "session" : "sessions"}
+          </p>
+        </div>
+      </header>
+      <ol className="agenda-slots">
+        {day.slots.map((subject, index) => (
+          <li key={`${subject.id}-${index}`}>
+            <span className="slot-number" aria-label={`Session ${index + 1}`}>
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <div>
+              <span className="subject-code">{subject.code}</span>
+              <a href={`#/subjects/${subject.id}`}>{subject.name}</a>
+              <small>Weight {subject.weight.toFixed(2)}</small>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </article>
+  );
 }
 
-export const PlanPreviewCard: React.FC<PlanPreviewCardProps> = ({ plan, isSaved = false }) => {
-  const getMonthName = (month: number) => {
-    const date = new Date(2026, month - 1, 1);
-    return date.toLocaleString('default', { month: 'long' });
-  };
-
-  const formatDateLabel = (dateString: string) => {
-    try {
-      const [y, m, d] = dateString.split('-').map(Number);
-      const date = new Date(y, m - 1, d);
-      return {
-        weekday: date.toLocaleString('default', { weekday: 'short' }),
-        day: d,
-        monthYear: date.toLocaleString('default', { month: 'short', year: 'numeric' }),
-      };
-    } catch {
-      return { weekday: '', day: dateString, monthYear: '' };
-    }
-  };
-
-  return (
-    <div className="plan-results">
-      {/* Plan Header Bar */}
-      <div className="plan-header-banner">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          <div className="plan-badge-icon">
-            <Sparkles size={24} color="#FFFFFF" />
-          </div>
-          <div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-navy)' }}>
-              Study Schedule for {getMonthName(plan.month)} {plan.year}
-            </h3>
-            <span style={{ fontSize: '14px', color: 'var(--color-muted)' }}>
-              {plan.days.length} Days Allocated • {isSaved ? 'Persisted Monthly Plan' : 'Generated Proposal Preview'}
-            </span>
-          </div>
-        </div>
-
-        <div>
-          <span className={`badge ${isSaved ? 'badge-active' : 'badge-primary'}`} style={{ padding: '0.4rem 1rem', fontSize: '14px' }}>
-            {isSaved ? 'Saved Plan' : 'Preview Proposal'}
-          </span>
-        </div>
-      </div>
-
-      {/* Grid of Daily Schedules */}
-      <div className="days-grid">
-        {plan.days.map((dayItem) => {
-          const formatted = formatDateLabel(dayItem.date);
-          return (
-            <div className="day-card" key={dayItem.date} id={`day-card-${dayItem.date}`}>
-              <div className="day-card-header">
-                <div className="date-badge">
-                  <span className="date-day">{formatted.day}</span>
-                  <span className="date-month">{formatted.weekday}</span>
-                </div>
-                <div className="date-meta">
-                  <span className="full-date-string">{dayItem.date}</span>
-                  <span className="slot-count">{dayItem.slots.length} Slots</span>
-                </div>
-              </div>
-
-              <div className="slots-list">
-                {dayItem.slots.map((subject, slotIdx) => (
-                  <div className="slot-item" key={`${dayItem.date}-slot-${slotIdx}`}>
-                    <div className="slot-pill">
-                      <Clock size={12} /> Slot {slotIdx + 1}
-                    </div>
-                    <div className="slot-subject-info">
-                      <span className="slot-subject-code">{subject.code}</span>
-                      <span className="slot-subject-name">{subject.name}</span>
-                    </div>
-                    <span className="slot-subject-weight" title="Weight">
-                      w: {subject.weight.toFixed(2)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <style>{`
-        .plan-results {
-          margin-top: 2rem;
-          animation: fadeIn 0.3s ease-out;
-        }
-
-        .plan-header-banner {
-          background: #FFFFFF;
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
-          padding: 1.5rem 2rem;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 2rem;
-          box-shadow: var(--shadow-sm);
-        }
-
-        .plan-badge-icon {
-          width: 48px;
-          height: 48px;
-          border-radius: var(--radius-md);
-          background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .days-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-          gap: 1.5rem;
-        }
-
-        .day-card {
-          background: #FFFFFF;
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
-          padding: 1.25rem;
-          box-shadow: var(--shadow-sm);
-          transition: transform var(--transition-normal), box-shadow var(--transition-normal);
-        }
-
-        .day-card:hover {
-          transform: translateY(-3px);
-          box-shadow: var(--shadow-md);
-          border-color: rgba(3, 147, 244, 0.3);
-        }
-
-        .day-card-header {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          margin-bottom: 1rem;
-          padding-bottom: 0.75rem;
-          border-bottom: 1px solid var(--color-border);
-        }
-
-        .date-badge {
-          width: 46px;
-          height: 48px;
-          background: var(--color-primary-light);
-          border: 1px solid rgba(3, 147, 244, 0.2);
-          border-radius: var(--radius-md);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-
-        .date-day {
-          font-size: 1.15rem;
-          font-weight: 700;
-          color: var(--color-primary-hover);
-          line-height: 1;
-        }
-
-        .date-month {
-          font-size: 11px;
-          font-weight: 600;
-          color: var(--color-muted);
-          text-transform: uppercase;
-        }
-
-        .date-meta {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .full-date-string {
-          font-size: 14px;
-          font-weight: 600;
-          color: var(--color-navy);
-        }
-
-        .slot-count {
-          font-size: 12px;
-          color: var(--color-muted);
-        }
-
-        .slots-list {
-          display: flex;
-          flex-direction: column;
-          gap: 0.65rem;
-        }
-
-        .slot-item {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 0.75rem;
-          background: var(--color-bg);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
-          padding: 0.65rem 0.85rem;
-        }
-
-        .slot-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          font-size: 11px;
-          font-weight: 700;
-          color: var(--color-primary-hover);
-          background: #FFFFFF;
-          border: 1px solid rgba(3, 147, 244, 0.3);
-          padding: 0.2rem 0.5rem;
-          border-radius: var(--radius-pill);
-          white-space: nowrap;
-        }
-
-        .slot-subject-info {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-        }
-
-        .slot-subject-code {
-          font-size: 13px;
-          font-weight: 700;
-          color: var(--color-navy);
-        }
-
-        .slot-subject-name {
-          font-size: 12px;
-          color: var(--color-muted);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .slot-subject-weight {
-          font-size: 11px;
-          font-weight: 600;
-          color: var(--color-muted);
-          background: #FFFFFF;
-          padding: 0.15rem 0.4rem;
-          border-radius: var(--radius-sm);
-          border: 1px solid var(--color-border);
-        }
-      `}</style>
-    </div>
+export function PlanPreviewCard({
+  plan,
+  isSaved,
+}: {
+  plan: StudyPlan;
+  isSaved: boolean;
+}) {
+  const searchId = useId();
+  const [view, setView] = useState<"month" | "agenda">(() =>
+    window.matchMedia("(max-width: 640px)").matches ? "agenda" : "month",
   );
-};
+  const [selected, setSelected] = useState(plan.days[0]?.date ?? "");
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState("");
+  const days = useMemo(
+    () =>
+      plan.days.filter(
+        (day) =>
+          (!filter || day.date === filter) &&
+          (!query ||
+            day.slots.some((subject) =>
+              `${subject.code} ${subject.name}`
+                .toLowerCase()
+                .includes(query.toLowerCase().trim()),
+            )),
+      ),
+    [plan, query, filter],
+  );
+  const selectedDay = days.find((day) => day.date === selected) ?? days[0];
+  const selectedIndex = days.findIndex((day) => day.date === selectedDay?.date);
+  const offset = (new Date(plan.year, plan.month - 1, 1).getDay() + 6) % 7;
+  const length = new Date(plan.year, plan.month, 0).getDate();
+  return (
+    <section className="plan-results" aria-label="Monthly schedule">
+      <div className="schedule-heading">
+        <div>
+          <h2>{monthName(plan.year, plan.month)}</h2>
+          <p>
+            {plan.days.length} days ·{" "}
+            {plan.days.reduce((sum, day) => sum + day.slots.length, 0)} sessions
+            <span
+              className={`badge ${isSaved ? "badge-active" : "badge-primary"}`}
+            >
+              {isSaved ? "Saved plan" : "Preview · not saved"}
+            </span>
+          </p>
+        </div>
+        <div className="view-switch" role="group" aria-label="Schedule view">
+          <button
+            aria-pressed={view === "month"}
+            onClick={() => setView("month")}
+          >
+            <CalendarDays size={16} />
+            Month
+          </button>
+          <button
+            aria-pressed={view === "agenda"}
+            onClick={() => setView("agenda")}
+          >
+            <List size={16} />
+            Agenda
+          </button>
+        </div>
+      </div>
+      <div className="schedule-filters">
+        <div className="search-field">
+          <Search size={17} />
+          <label className="sr-only" htmlFor={searchId}>
+            Find a subject in this plan
+          </label>
+          <input
+            id={searchId}
+            type="search"
+            placeholder="Find a subject in this plan…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
+        <label className="date-filter">
+          Day
+          <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+            <option value="">All days</option>
+            {plan.days.map((day) => (
+              <option key={day.date} value={day.date}>
+                {localDate(day.date).toLocaleDateString("en", {
+                  month: "short",
+                  day: "numeric",
+                  weekday: "short",
+                })}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      {!days.length ? (
+        <EmptyState
+          title="No sessions match"
+          action={
+            <button
+              className="btn btn-secondary"
+              onClick={() => {
+                setQuery("");
+                setFilter("");
+              }}
+            >
+              Clear filters
+            </button>
+          }
+        >
+          Try another subject name or choose a different day.
+        </EmptyState>
+      ) : view === "agenda" ? (
+        <div className="days-grid">
+          {days.map((day) => (
+            <DaySchedule day={day} key={day.date} />
+          ))}
+        </div>
+      ) : (
+        <div className="calendar-layout">
+          <div className="calendar-panel">
+            <div className="calendar-weekdays" aria-hidden="true">
+              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
+                <span key={day}>{day}</span>
+              ))}
+            </div>
+            <div className="calendar-grid">
+              {Array.from({ length: offset }, (_, i) => (
+                <div key={`blank-${i}`} className="calendar-blank" />
+              ))}
+              {Array.from({ length }, (_, i) => {
+                const day = days.find(
+                  (item) => Number(item.date.slice(-2)) === i + 1,
+                );
+                return (
+                  <button
+                    key={i}
+                    className={`calendar-day ${day?.date === selectedDay?.date ? "selected" : ""}`}
+                    disabled={!day}
+                    aria-pressed={!!day && day.date === selectedDay?.date}
+                    aria-label={`${monthName(plan.year, plan.month)}, day ${i + 1}${day ? `, ${day.slots.length} sessions` : ", no matching sessions"}`}
+                    onClick={() => day && setSelected(day.date)}
+                  >
+                    <span className="calendar-day-number">{i + 1}</span>
+                    {day && (
+                      <>
+                        <span className="calendar-codes">
+                          {day.slots.slice(0, 2).map((subject) => (
+                            <span key={subject.id}>{subject.code}</span>
+                          ))}
+                          {day.slots.length > 2 && (
+                            <small>+{day.slots.length - 2} more</small>
+                          )}
+                        </span>
+                        <span className="mobile-slot-count">
+                          {day.slots.length}
+                          <span className="sr-only"> sessions</span>
+                        </span>
+                      </>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="calendar-hint">
+              Select a day to explore its sessions.
+            </p>
+          </div>
+          {selectedDay && (
+            <aside className="selected-day">
+              <div className="day-navigation">
+                <span>Daily focus</span>
+                <div>
+                  <button
+                    className="btn-icon"
+                    aria-label="Previous day"
+                    disabled={selectedIndex <= 0}
+                    onClick={() => setSelected(days[selectedIndex - 1].date)}
+                  >
+                    <ChevronLeft size={17} />
+                  </button>
+                  <button
+                    className="btn-icon"
+                    aria-label="Next day"
+                    disabled={selectedIndex >= days.length - 1}
+                    onClick={() => setSelected(days[selectedIndex + 1].date)}
+                  >
+                    <ChevronRight size={17} />
+                  </button>
+                </div>
+              </div>
+              <div aria-live="polite">
+                <DaySchedule day={selectedDay} />
+              </div>
+            </aside>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}

@@ -1,8 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { AlertCircle, Check, X } from 'lucide-react';
-import type { CreateSubjectRequest, FieldError, Subject, UpdateSubjectRequest } from '../../types/studyPlanner';
-import { subjectApi } from '../../api/subjectApi';
-import { NormalizedApiError } from '../../api/client';
+import React, { useState } from "react";
+import { AlertCircle, Check, X } from "lucide-react";
+import type {
+  CreateSubjectRequest,
+  FieldError,
+  Subject,
+  UpdateSubjectRequest,
+} from "../../types/studyPlanner";
+import { subjectApi } from "../../api/subjectApi";
+import { NormalizedApiError } from "../../api/client";
+import { Modal } from "../Modal";
 
 interface SubjectFormModalProps {
   isOpen: boolean;
@@ -19,30 +25,16 @@ export const SubjectFormModal: React.FC<SubjectFormModalProps> = ({
 }) => {
   const isEditing = Boolean(subjectToEdit);
 
-  const [code, setCode] = useState('');
-  const [name, setName] = useState('');
-  const [weight, setWeight] = useState('1.0');
-  const [active, setActive] = useState(true);
+  const [code, setCode] = useState(subjectToEdit?.code ?? "");
+  const [name, setName] = useState(subjectToEdit?.name ?? "");
+  const [weight, setWeight] = useState(
+    subjectToEdit?.weight.toString() ?? "1.0",
+  );
+  const [active, setActive] = useState(subjectToEdit?.active ?? true);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    if (subjectToEdit) {
-      setCode(subjectToEdit.code);
-      setName(subjectToEdit.name);
-      setWeight(subjectToEdit.weight.toString());
-      setActive(subjectToEdit.active);
-    } else {
-      setCode('');
-      setName('');
-      setWeight('1.0');
-      setActive(true);
-    }
-    setFormError(null);
-    setFieldErrors({});
-  }, [subjectToEdit, isOpen]);
 
   if (!isOpen) return null;
 
@@ -53,23 +45,23 @@ export const SubjectFormModal: React.FC<SubjectFormModalProps> = ({
     const parsedWeight = parseFloat(weight);
 
     if (!trimmedCode) {
-      errors.code = 'Subject code is required.';
+      errors.code = "Subject code is required.";
     } else if (trimmedCode.length !== 6) {
-      errors.code = 'Subject code must be exactly 6 characters.';
+      errors.code = "Subject code must be exactly 6 characters.";
     }
 
     if (!trimmedName) {
-      errors.name = 'Subject name is required.';
+      errors.name = "Subject name is required.";
     } else if (trimmedName.length > 255) {
-      errors.name = 'Subject name cannot exceed 255 characters.';
+      errors.name = "Subject name cannot exceed 255 characters.";
     }
 
     if (isNaN(parsedWeight)) {
-      errors.weight = 'Weight must be a valid number.';
+      errors.weight = "Weight must be a valid number.";
     } else if (parsedWeight < 0.01) {
-      errors.weight = 'Weight must be at least 0.01.';
+      errors.weight = "Weight must be at least 0.01.";
     } else if (parsedWeight > 999.99) {
-      errors.weight = 'Weight cannot exceed 999.99.';
+      errors.weight = "Weight cannot exceed 999.99.";
     }
 
     setFieldErrors(errors);
@@ -104,15 +96,21 @@ export const SubjectFormModal: React.FC<SubjectFormModalProps> = ({
       if (err instanceof NormalizedApiError) {
         const apiErr = err.apiError;
         if (apiErr.status === 409) {
-          setFormError(apiErr.message || `Subject code "${code.trim().toUpperCase()}" already exists.`);
-        } else if (apiErr.code === 'VALIDATION_FAILED' && apiErr.errors?.length) {
+          setFormError(
+            apiErr.message ||
+              `Subject code "${code.trim().toUpperCase()}" already exists.`,
+          );
+        } else if (
+          apiErr.code === "VALIDATION_FAILED" &&
+          apiErr.errors?.length
+        ) {
           const mapping: Record<string, string> = {};
-          let unmapped = '';
+          let unmapped = "";
           apiErr.errors.forEach((fe: FieldError) => {
             if (fe.field) {
               mapping[fe.field] = fe.message;
             } else {
-              unmapped += (unmapped ? '; ' : '') + fe.message;
+              unmapped += (unmapped ? "; " : "") + fe.message;
             }
           });
           setFieldErrors(mapping);
@@ -120,10 +118,12 @@ export const SubjectFormModal: React.FC<SubjectFormModalProps> = ({
             setFormError(unmapped || apiErr.message);
           }
         } else {
-          setFormError(apiErr.message || 'Failed to save subject. Please try again.');
+          setFormError(
+            apiErr.message || "Failed to save subject. Please try again.",
+          );
         }
       } else {
-        setFormError('An unexpected error occurred. Please try again.');
+        setFormError("An unexpected error occurred. Please try again.");
       }
     } finally {
       setIsSubmitting(false);
@@ -131,144 +131,187 @@ export const SubjectFormModal: React.FC<SubjectFormModalProps> = ({
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose} id="subject-modal-backdrop">
-      <div className="modal-dialog" onClick={(e) => e.stopPropagation()} id="subject-modal-dialog">
-        <div className="modal-header">
-          <h3 className="modal-title">
-            {isEditing ? `Edit Subject (${subjectToEdit?.code})` : 'Add New Subject'}
-          </h3>
-          <button className="btn-icon" onClick={onClose} id="btn-close-subject-modal">
-            <X size={20} />
-          </button>
-        </div>
+    <Modal
+      initialFocus="#subject-code"
+      onClose={onClose}
+      labelledBy="subject-dialog-title"
+      busy={isSubmitting}
+      id="subject-modal-dialog"
+    >
+      <div className="modal-header">
+        <h2 className="modal-title" id="subject-dialog-title">
+          {isEditing
+            ? `Edit Subject (${subjectToEdit?.code})`
+            : "Add New Subject"}
+        </h2>
+        <button
+          className="btn-icon"
+          onClick={onClose}
+          id="btn-close-subject-modal"
+          aria-label="Close subject form"
+          disabled={isSubmitting}
+        >
+          <X size={20} />
+        </button>
+      </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="modal-body">
-            {formError && (
-              <div className="alert alert-error">
-                <AlertCircle size={18} style={{ flexShrink: 0 }} />
-                <div>{formError}</div>
-              </div>
+      <form onSubmit={handleSubmit}>
+        <div className="modal-body">
+          {formError && (
+            <div className="alert alert-error" role="alert">
+              <AlertCircle size={18} style={{ flexShrink: 0 }} />
+              <div>{formError}</div>
+            </div>
+          )}
+
+          <div className="form-group">
+            <label className="form-label" htmlFor="subject-code">
+              Subject Code *
+            </label>
+            <input
+              id="subject-code"
+              autoFocus
+              aria-invalid={!!fieldErrors.code}
+              aria-describedby="subject-code-help"
+              disabled={isSubmitting}
+              type="text"
+              className={`form-input ${fieldErrors.code ? "has-error" : ""}`}
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="e.g. SBA301 (6 characters)"
+              maxLength={6}
+              required
+            />
+            {fieldErrors.code ? (
+              <span className="error-text" id="subject-code-help" role="alert">
+                <AlertCircle size={14} /> {fieldErrors.code}
+              </span>
+            ) : (
+              <span
+                id="subject-code-help"
+                style={{ fontSize: "12px", color: "var(--color-muted)" }}
+              >
+                Must be exactly 6 characters (e.g., PRM393).
+              </span>
             )}
+          </div>
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="subject-code">
-                Subject Code *
-              </label>
-              <input
-                id="subject-code"
-                type="text"
-                className={`form-input ${fieldErrors.code ? 'has-error' : ''}`}
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                placeholder="e.g. SBA301 (6 characters)"
-                maxLength={6}
-                required
-              />
-              {fieldErrors.code ? (
-                <span className="error-text">
-                  <AlertCircle size={14} /> {fieldErrors.code}
+          <div className="form-group">
+            <label className="form-label" htmlFor="subject-name">
+              Subject Name *
+            </label>
+            <input
+              id="subject-name"
+              aria-invalid={!!fieldErrors.name}
+              aria-describedby={
+                fieldErrors.name ? "subject-name-error" : undefined
+              }
+              disabled={isSubmitting}
+              type="text"
+              className={`form-input ${fieldErrors.name ? "has-error" : ""}`}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Software Business Applications"
+              maxLength={255}
+              required
+            />
+            {fieldErrors.name && (
+              <span className="error-text">
+                <AlertCircle size={14} />
+                <span id="subject-name-error" role="alert">
+                  {fieldErrors.name}
                 </span>
-              ) : (
-                <span style={{ fontSize: '12px', color: 'var(--color-muted)' }}>
-                  Must be exactly 6 characters (e.g., PRM393).
-                </span>
-              )}
-            </div>
+              </span>
+            )}
+          </div>
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="subject-name">
-                Subject Name *
-              </label>
-              <input
-                id="subject-name"
-                type="text"
-                className={`form-input ${fieldErrors.name ? 'has-error' : ''}`}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Software Business Applications"
-                maxLength={255}
-                required
-              />
-              {fieldErrors.name && (
-                <span className="error-text">
-                  <AlertCircle size={14} /> {fieldErrors.name}
-                </span>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label className="form-label" htmlFor="subject-weight">
-                Study Weight *
-              </label>
-              <input
-                id="subject-weight"
-                type="number"
-                step="0.01"
-                min="0.01"
-                max="999.99"
-                className={`form-input ${fieldErrors.weight ? 'has-error' : ''}`}
-                value={weight}
-                onChange={(e) => setWeight(e.target.value)}
-                placeholder="1.0"
-                required
-              />
-              {fieldErrors.weight ? (
-                <span className="error-text">
-                  <AlertCircle size={14} /> {fieldErrors.weight}
-                </span>
-              ) : (
-                <span style={{ fontSize: '12px', color: 'var(--color-muted)' }}>
+          <div className="form-group">
+            <label className="form-label" htmlFor="subject-weight">
+              Study Weight *
+            </label>
+            <input
+              id="subject-weight"
+              aria-invalid={!!fieldErrors.weight}
+              aria-describedby="subject-weight-help"
+              disabled={isSubmitting}
+              type="number"
+              step="0.01"
+              min="0.01"
+              max="999.99"
+              className={`form-input ${fieldErrors.weight ? "has-error" : ""}`}
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+              placeholder="1.0"
+              required
+            />
+            {fieldErrors.weight ? (
+              <span
+                className="error-text"
+                id="subject-weight-help"
+                role="alert"
+              >
+                <AlertCircle size={14} /> {fieldErrors.weight}
+              </span>
+            ) : (
+              <span style={{ fontSize: "12px", color: "var(--color-muted)" }}>
+                <span id="subject-weight-help">
                   Numeric importance weight between 0.01 and 999.99.
                 </span>
-              )}
-            </div>
-
-            <div className="form-group" style={{ marginTop: '1.5rem' }}>
-              <label className="form-checkbox-label">
-                <input
-                  type="checkbox"
-                  className="form-checkbox"
-                  checked={active}
-                  onChange={(e) => setActive(e.target.checked)}
-                  id="subject-active"
-                />
-                <span>Active for Study Plan Generation</span>
-              </label>
-              <span style={{ fontSize: '12px', color: 'var(--color-muted)', marginLeft: '1.85rem' }}>
-                Only active subjects are included when generating study plans.
               </span>
-            </div>
+            )}
           </div>
 
-          <div className="modal-footer">
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={onClose}
-              disabled={isSubmitting}
-              id="btn-cancel-subject"
+          <div className="form-group" style={{ marginTop: "1.5rem" }}>
+            <label className="form-checkbox-label">
+              <input
+                type="checkbox"
+                className="form-checkbox"
+                checked={active}
+                onChange={(e) => setActive(e.target.checked)}
+                id="subject-active"
+                disabled={isSubmitting}
+              />
+              <span>Active for Study Plan Generation</span>
+            </label>
+            <span
+              style={{
+                fontSize: "12px",
+                color: "var(--color-muted)",
+                marginLeft: "1.85rem",
+              }}
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary btn-sm"
-              disabled={isSubmitting}
-              id="btn-save-subject"
-            >
-              {isSubmitting ? (
-                <span>Saving...</span>
-              ) : (
-                <>
-                  <Check size={16} />
-                  <span>{isEditing ? 'Update Subject' : 'Create Subject'}</span>
-                </>
-              )}
-            </button>
+              Only active subjects are included when generating study plans.
+            </span>
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+
+        <div className="modal-footer">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={onClose}
+            disabled={isSubmitting}
+            id="btn-cancel-subject"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="btn btn-primary btn-sm"
+            disabled={isSubmitting}
+            id="btn-save-subject"
+          >
+            {isSubmitting ? (
+              <span>Saving...</span>
+            ) : (
+              <>
+                <Check size={16} />
+                <span>{isEditing ? "Update Subject" : "Create Subject"}</span>
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 };
