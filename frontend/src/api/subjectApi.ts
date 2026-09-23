@@ -1,12 +1,25 @@
-import { apiFetch } from './client';
-import type { CreateSubjectRequest, Subject, SubjectPage, UpdateSubjectRequest } from '../types/studyPlanner';
+import { apiFetch } from "./client";
+import type {
+  CreateSubjectRequest,
+  Subject,
+  SubjectPage,
+  UpdateSubjectRequest,
+} from "../types/studyPlanner";
 
 export const subjectApi = {
-  getSubjects: async (page = 0, size = 20, sort = 'id,asc'): Promise<SubjectPage> => {
+  getSubjects: async (
+    page = 0,
+    size = 20,
+    sort = "id,asc",
+    filters: { name?: string; code?: string; active?: boolean } = {},
+  ): Promise<SubjectPage> => {
     const params = new URLSearchParams({
       page: page.toString(),
       size: size.toString(),
       sort,
+    });
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== "") params.set(key, String(value));
     });
     return apiFetch<SubjectPage>(`/api/v1/subjects?${params.toString()}`);
   },
@@ -16,22 +29,25 @@ export const subjectApi = {
   },
 
   createSubject: async (request: CreateSubjectRequest): Promise<Subject> => {
-    return apiFetch<Subject>('/api/v1/subjects', {
-      method: 'POST',
+    return apiFetch<Subject>("/api/v1/subjects", {
+      method: "POST",
       body: JSON.stringify(request),
     });
   },
 
-  updateSubject: async (id: number, request: UpdateSubjectRequest): Promise<Subject> => {
+  updateSubject: async (
+    id: number,
+    request: UpdateSubjectRequest,
+  ): Promise<Subject> => {
     return apiFetch<Subject>(`/api/v1/subjects/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(request),
     });
   },
 
   deleteSubject: async (id: number): Promise<void> => {
     return apiFetch<void>(`/api/v1/subjects/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 };

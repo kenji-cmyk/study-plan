@@ -1,22 +1,21 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-
 :root {
-  --color-primary: #0393F4;
-  --color-primary-hover: #1668C4;
-  --color-primary-light: #EAF4FF;
-  --color-navy: #17304F;
-  --color-muted: #698DA5;
-  --color-border: #D8E5F2;
-  --color-surface: #FFFFFF;
-  --color-bg: #F4F8FC;
-  --color-error: #D94B4B;
-  --color-error-bg: #FDF2F2;
-  --color-success: #10B981;
-  --color-success-bg: #ECFDF5;
-  --color-warning: #F59E0B;
-  --color-warning-bg: #FFFBEB;
+  --color-primary: #0393f4;
+  --color-primary-hover: #1668c4;
+  --color-primary-light: #eaf4ff;
+  --color-navy: #17304f;
+  --color-muted: #526e83;
+  --color-border: #d8e5f2;
+  --color-surface: #ffffff;
+  --color-bg: #f4f8fc;
+  --color-error: #b83232;
+  --color-error-bg: #fdf2f2;
+  --color-success: #087858;
+  --color-success-bg: #ecfdf5;
+  --color-warning: #f59e0b;
+  --color-warning-bg: #fffbeb;
 
-  --font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family:
+    "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --radius-pill: 9999px;
   --radius-lg: 16px;
   --radius-md: 12px;
@@ -48,7 +47,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 600;
   color: var(--color-navy);
 }
@@ -60,7 +64,9 @@ button {
   background: none;
 }
 
-input, select, textarea {
+input,
+select,
+textarea {
   font-family: var(--font-family);
   font-size: 15px;
 }
@@ -87,7 +93,9 @@ input, select, textarea {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   padding: 2rem;
-  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  transition:
+    transform var(--transition-normal),
+    box-shadow var(--transition-normal);
 }
 
 .card-header {
@@ -110,7 +118,10 @@ input, select, textarea {
   height: 52px;
   padding: 0 1.75rem;
   border-radius: var(--radius-pill);
-  transition: all var(--transition-normal);
+  transition:
+    transform var(--transition-normal),
+    background-color var(--transition-fast),
+    box-shadow var(--transition-fast);
   text-decoration: none;
   user-select: none;
   white-space: nowrap;
@@ -124,7 +135,7 @@ input, select, textarea {
 }
 
 .btn-primary {
-  background-color: var(--color-primary);
+  background-color: var(--color-primary-hover);
   color: #ffffff;
   box-shadow: var(--shadow-primary);
 }
@@ -179,7 +190,9 @@ input, select, textarea {
   align-items: center;
   justify-content: center;
   color: var(--color-muted);
-  transition: all var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
 }
 
 .btn-icon:hover {
@@ -204,7 +217,8 @@ input, select, textarea {
   gap: 0.35rem;
 }
 
-.form-input, .form-select {
+.form-input,
+.form-select {
   height: 44px;
   padding: 0 1rem;
   border-radius: var(--radius-md);
@@ -212,16 +226,20 @@ input, select, textarea {
   background: var(--color-surface);
   color: var(--color-navy);
   outline: none;
-  transition: all var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
   width: 100%;
 }
 
-.form-input:focus, .form-select:focus {
+.form-input:focus,
+.form-select:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 4px rgba(3, 147, 244, 0.15);
 }
 
-.form-input.has-error, .form-select.has-error {
+.form-input.has-error,
+.form-select.has-error {
   border-color: var(--color-error);
   background-color: var(--color-error-bg);
 }
@@ -271,14 +289,14 @@ input, select, textarea {
 }
 
 .badge-inactive {
-  background-color: #F3F4F6;
-  color: #9CA3AF;
-  border: 1px solid #E5E7EB;
+  background-color: #f3f4f6;
+  color: #526e83;
+  border: 1px solid #e5e7eb;
 }
 
 .badge-primary {
   background-color: var(--color-primary-light);
-  color: var(--color-primary);
+  color: var(--color-primary-hover);
 }
 
 /* Modal Backdrop & Dialog */
@@ -325,7 +343,7 @@ input, select, textarea {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
-  background: #FAFDFZ;
+  background: var(--color-bg);
 }
 
 /* Alert Banner */
@@ -343,7 +361,7 @@ input, select, textarea {
 .alert-warning {
   background-color: var(--color-warning-bg);
   border: 1px solid rgba(245, 158, 11, 0.3);
-  color: #B45309;
+  color: #b45309;
 }
 
 .alert-error {
@@ -366,24 +384,38 @@ input, select, textarea {
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Skeleton Loading */
 .skeleton {
-  background: linear-gradient(90deg, #EAF4FF 25%, #D8E5F2 50%, #EAF4FF 75%);
+  background: linear-gradient(90deg, #eaf4ff 25%, #d8e5f2 50%, #eaf4ff 75%);
   background-size: 200% 100%;
   animation: loading 1.5s infinite;
   border-radius: var(--radius-sm);
 }
 
 @keyframes loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }

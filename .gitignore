@@ -5,6 +5,8 @@ target/
 !**/src/test/**/target/
 .agents
 .codex
+.impeccable
+.playwright-mcp
 
 ### STS ###
 .apt_generated

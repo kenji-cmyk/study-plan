@@ -1,314 +1,363 @@
-import React, { useEffect, useState } from 'react';
-import { AlertCircle, Calendar, Eye, Info, Save, Sparkles } from 'lucide-react';
-import type { CreateStudyPlanRequest, StudyPlan } from '../../types/studyPlanner';
-import { planApi } from '../../api/planApi';
-import { subjectApi } from '../../api/subjectApi';
-import { NormalizedApiError } from '../../api/client';
-import { PlanPreviewCard } from './PlanPreviewCard';
+import { monthName } from "../../utils/dates";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowRight, Check, Info, Save, Shuffle } from "lucide-react";
+import type {
+  CreateStudyPlanRequest,
+  StudyPlan,
+} from "../../types/studyPlanner";
+import { planApi } from "../../api/planApi";
+import { subjectApi } from "../../api/subjectApi";
+import { useResource } from "../../hooks/useResource";
+import { ErrorState, LoadingState, PageHeading, type Notify } from "../ui";
+import { PlanPreviewCard } from "./PlanPreviewCard";
 
-interface PlanGeneratorProps {
-  onNotify: (type: 'success' | 'error' | 'info' | 'warning', message: string, title?: string) => void;
-  activeSubjectsCount?: number;
-}
-
-export const PlanGenerator: React.FC<PlanGeneratorProps> = ({ onNotify, activeSubjectsCount: externalActiveCount }) => {
-  const currentDate = new Date();
-  const defaultYear = currentDate.getFullYear();
-  const defaultMonth = currentDate.getMonth() + 1; // 1..12
-
-  const [year, setYear] = useState<number>(defaultYear);
-  const [month, setMonth] = useState<number>(defaultMonth);
-  const [slotsPerDay, setSlotsPerDay] = useState<number>(3);
-
-  const [activeSubjectsCount, setActiveSubjectsCount] = useState<number>(externalActiveCount ?? 0);
-  const [isCheckingActive, setIsCheckingActive] = useState<boolean>(false);
-
-  // Preview & Saved state
-  const [previewPlan, setPreviewPlan] = useState<StudyPlan | null>(null);
-  const [isSaved, setIsSaved] = useState<boolean>(false);
-  const [previewInputs, setPreviewInputs] = useState<{ year: number; month: number; slotsPerDay: number } | null>(null);
-
-  // Async loading & error state
-  const [isPreviewLoading, setIsPreviewLoading] = useState<boolean>(false);
-  const [isSaveLoading, setIsSaveLoading] = useState<boolean>(false);
+export function PlanGenerator({
+  onNotify,
+  visible,
+}: {
+  onNotify: Notify;
+  visible: boolean;
+}) {
+  const today = new Date();
+  const currentYear = today.getFullYear(),
+    currentMonth = today.getMonth() + 1;
+  const [settings, setSettings] = useState<CreateStudyPlanRequest>({
+    year: currentYear,
+    month: currentMonth,
+    slotsPerDay: 3,
+  });
+  const [plan, setPlan] = useState<StudyPlan | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [busy, setBusy] = useState<"preview" | "save" | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  // Fetch active subject count if not supplied by parent
+  const [conflict, setConflict] = useState(false);
+  const mounted = useRef(true);
   useEffect(() => {
-    if (externalActiveCount !== undefined) {
-      setActiveSubjectsCount(externalActiveCount);
-      return;
-    }
-
-    const loadActiveCount = async () => {
-      setIsCheckingActive(true);
-      try {
-        const page = await subjectApi.getSubjects(0, 100);
-        const active = page.content.filter((s) => s.active).length;
-        setActiveSubjectsCount(active);
-      } catch {
-        // Ignored
-      } finally {
-        setIsCheckingActive(false);
-      }
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
     };
-
-    loadActiveCount();
-  }, [externalActiveCount]);
-
-  // Check if inputs have changed since last preview
-  const inputsChanged = Boolean(
-    previewInputs &&
-      (previewInputs.year !== year ||
-        previewInputs.month !== month ||
-        previewInputs.slotsPerDay !== slotsPerDay)
+  }, []);
+  const active = useResource(
+    useCallback(
+      () => subjectApi.getSubjects(0, 1, "id,asc", { active: true }),
+      [],
+    ),
   );
-
-  // Invalidate preview if inputs change
+  const refreshSubjects = active.refresh;
   useEffect(() => {
-    if (inputsChanged && previewPlan) {
-      setPreviewPlan(null);
-      setIsSaved(false);
-      setPreviewInputs(null);
-    }
-  }, [inputsChanged, previewPlan]);
-
-  const handlePreview = async () => {
+    // Keep the random draft while checking any subject edits made on another page.
+    if (visible) refreshSubjects();
+  }, [visible, refreshSubjects]);
+  const count = active.data?.totalElements ?? 0;
+  const insufficient = count < settings.slotsPerDay;
+  const past =
+    settings.year < currentYear ||
+    (settings.year === currentYear && settings.month < currentMonth);
+  const update = (next: Partial<CreateStudyPlanRequest>) => {
+    setSettings((value) => ({ ...value, ...next }));
+    setPlan(null);
+    setSaved(false);
     setError(null);
-    setIsPreviewLoading(true);
+    setConflict(false);
+  };
+  const generate = async (save: boolean) => {
+    if (
+      busy ||
+      past ||
+      insufficient ||
+      active.loading ||
+      active.error ||
+      (save && (!plan || saved))
+    )
+      return;
+    setBusy(save ? "save" : "preview");
+    setError(null);
+    setConflict(false);
     try {
-      const plan = await planApi.previewPlan(year, month, slotsPerDay);
-      setPreviewPlan(plan);
-      setIsSaved(false);
-      setPreviewInputs({ year, month, slotsPerDay });
-      onNotify('info', `Generated schedule preview for ${month}/${year}.`);
-    } catch (err) {
-      if (err instanceof NormalizedApiError) {
-        setError(err.apiError.message || 'Failed to generate preview.');
-      } else {
-        setError('Unexpected error generating preview. Please try again.');
-      }
+      const result = save
+        ? await planApi.savePlan(settings)
+        : await planApi.previewPlan(
+            settings.year,
+            settings.month,
+            settings.slotsPerDay,
+          );
+      if (!mounted.current) return;
+      setPlan(result);
+      setSaved(save);
+      if (save)
+        onNotify(
+          "success",
+          `Your plan for ${monthName(settings.year, settings.month)} is saved.`,
+          "Ready when you are",
+        );
+    } catch (reason) {
+      if (!mounted.current) return;
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "Unable to generate your plan. Please try again.",
+      );
+      setConflict(
+        !!reason &&
+          typeof reason === "object" &&
+          "apiError" in reason &&
+          (reason.apiError as { status?: number }).status === 409,
+      );
     } finally {
-      setIsPreviewLoading(false);
+      if (mounted.current) setBusy(null);
     }
   };
-
-  const handleSave = async () => {
-    if (!previewPlan || inputsChanged) return;
-    setError(null);
-    setIsSaveLoading(true);
-    try {
-      const payload: CreateStudyPlanRequest = { year, month, slotsPerDay };
-      const savedPlan = await planApi.savePlan(payload);
-      setPreviewPlan(savedPlan);
-      setIsSaved(true);
-      onNotify('success', `Study plan for ${month}/${year} persisted successfully!`, 'Plan Persisted');
-    } catch (err) {
-      if (err instanceof NormalizedApiError) {
-        const apiErr = err.apiError;
-        if (apiErr.status === 409) {
-          setError(apiErr.message || `A study plan already exists for ${month}/${year}.`);
-          onNotify('error', `A study plan already exists for ${month}/${year}.`, 'Conflict');
-        } else {
-          setError(apiErr.message || 'Failed to save study plan.');
-        }
-      } else {
-        setError('Unexpected error saving study plan.');
-      }
-    } finally {
-      setIsSaveLoading(false);
-    }
-  };
-
-  const monthOptions = [
-    { value: 1, label: 'January' },
-    { value: 2, label: 'February' },
-    { value: 3, label: 'March' },
-    { value: 4, label: 'April' },
-    { value: 5, label: 'May' },
-    { value: 6, label: 'June' },
-    { value: 7, label: 'July' },
-    { value: 8, label: 'August' },
-    { value: 9, label: 'September' },
-    { value: 10, label: 'October' },
-    { value: 11, label: 'November' },
-    { value: 12, label: 'December' },
-  ];
-
-  const yearOptions = Array.from({ length: 5 }, (_, i) => defaultYear + i);
-
   return (
-    <div className="plan-generator-view">
-      {/* Disclaimer Banner - Section 5 requirement */}
-      <div className="alert alert-warning" style={{ marginBottom: '1.5rem' }}>
-        <Info size={20} style={{ flexShrink: 0 }} />
-        <div>
-          <strong>Backend Schedule Behavior Notice:</strong> Preview generates a proposal for your chosen settings. Because the backend uses random tie-breaking, saving the plan generates a new schedule independently on the server.
+    <>
+      <PageHeading
+        title="Find your study rhythm"
+        description="A fresh mix of subjects. A whole month of possibilities."
+        back={{ href: "#/plans", label: "Your study plans" }}
+      />
+      <ol className="planning-steps" aria-label="Planning progress">
+        <li className="complete">
+          <span>1</span>Set your rhythm
+        </li>
+        <li className={plan ? "complete" : ""}>
+          <span>2</span>Explore the preview
+        </li>
+        <li className={saved ? "complete" : ""}>
+          <span>{saved ? <Check size={14} /> : "3"}</span>Save your month
+        </li>
+      </ol>
+      <section className="generator-settings">
+        <div className="generator-intro">
+          <h2>A month that fits you.</h2>
+          <p>
+            Your subjects are balanced by weight, with a fresh mix each day.
+          </p>
+          <a className="text-link" href="#/subjects">
+            Manage subjects
+            <ArrowRight size={15} />
+          </a>
         </div>
-      </div>
-
-      {/* Control Card */}
-      <div className="card">
-        <div className="card-header">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void generate(false);
+          }}
+        >
+          <fieldset disabled={!!busy}>
+            <legend className="sr-only">Plan settings</legend>
+            <div className="form-grid">
+              <div className="form-group">
+                <label className="form-label" htmlFor="plan-month">
+                  Month
+                </label>
+                <select
+                  className="form-select"
+                  id="plan-month"
+                  value={settings.month}
+                  onChange={(e) => update({ month: Number(e.target.value) })}
+                >
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <option
+                      value={i + 1}
+                      key={i}
+                      disabled={
+                        settings.year === currentYear && i + 1 < currentMonth
+                      }
+                    >
+                      {new Date(currentYear, i).toLocaleDateString("en", {
+                        month: "long",
+                      })}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="plan-year">
+                  Year
+                </label>
+                <select
+                  className="form-select"
+                  id="plan-year"
+                  value={settings.year}
+                  onChange={(e) => {
+                    const year = Number(e.target.value);
+                    update({
+                      year,
+                      month:
+                        year === currentYear
+                          ? Math.max(currentMonth, settings.month)
+                          : settings.month,
+                    });
+                  }}
+                >
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <option key={i}>{currentYear + i}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="plan-slots">
+                  Sessions per day
+                </label>
+                <select
+                  className="form-select"
+                  id="plan-slots"
+                  value={settings.slotsPerDay}
+                  onChange={(e) =>
+                    update({ slotsPerDay: Number(e.target.value) })
+                  }
+                >
+                  {Array.from({ length: 10 }, (_, i) => (
+                    <option value={i + 1} key={i}>
+                      {i + 1} {i === 0 ? "session" : "sessions"}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </fieldset>
+          <div className="generator-actions">
+            <span className="muted">
+              {active.loading
+                ? "Checking your subjects…"
+                : active.error
+                  ? "Subject count unavailable"
+                  : `${count} active ${count === 1 ? "subject" : "subjects"} in your mix`}
+            </span>
+            <button
+              className="btn btn-primary"
+              disabled={
+                !!busy ||
+                active.loading ||
+                !!active.error ||
+                insufficient ||
+                past
+              }
+              type="submit"
+            >
+              <Shuffle size={17} className={busy === "preview" ? "spin" : ""} />
+              {busy === "preview"
+                ? "Finding your rhythm…"
+                : plan
+                  ? "Mix it again"
+                  : "Generate preview"}
+            </button>
+          </div>
+        </form>
+      </section>
+      {active.error && (
+        <ErrorState message={active.error} retry={active.refresh} />
+      )}
+      {!active.loading && !active.error && insufficient && (
+        <div className="alert alert-warning" role="status">
+          <Info size={19} />
           <div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Generate Monthly Study Plan</h2>
-            <p style={{ fontSize: '14px', color: 'var(--color-muted)', marginTop: '0.2rem' }}>
-              Select target month, year, and daily study slot count to generate a schedule.
-            </p>
-          </div>
-          <div className="active-subject-badge">
-            <span style={{ fontSize: '13px', color: 'var(--color-muted)' }}>Active subjects:</span>
-            <strong className={`badge ${activeSubjectsCount >= slotsPerDay ? 'badge-active' : 'badge-inactive'}`}>
-              {isCheckingActive ? '...' : activeSubjectsCount} active
+            <strong>
+              {count === 0
+                ? "Start with a few subjects."
+                : "Your daily mix needs more subjects."}
             </strong>
+            <p>
+              {settings.slotsPerDay} daily sessions need at least{" "}
+              {settings.slotsPerDay} active subjects.{" "}
+              {count > 0
+                ? "Choose fewer sessions or add more active subjects."
+                : "Add and activate subjects to generate your first plan."}
+            </p>
+            <a className="text-link" href="#/subjects">
+              Go to subjects
+              <ArrowRight size={15} />
+            </a>
           </div>
         </div>
-
-        {/* Insufficient active subjects warning */}
-        {activeSubjectsCount < slotsPerDay && (
-          <div className="alert alert-warning">
-            <AlertCircle size={18} style={{ flexShrink: 0 }} />
+      )}
+      {error && (
+        <>
+          <ErrorState message={error} />
+          {conflict && (
+            <a
+              className="text-link conflict-link"
+              href={`#/plans/${settings.year}/${settings.month}`}
+            >
+              Open the saved plan for this month
+              <ArrowRight size={16} />
+            </a>
+          )}
+        </>
+      )}
+      {busy === "preview" ? (
+        <LoadingState />
+      ) : plan ? (
+        <>
+          <PlanPreviewCard
+            key={`${settings.year}-${settings.month}-${saved}`}
+            plan={plan}
+            isSaved={saved}
+          />
+          <div className={`save-bar ${saved ? "is-saved" : ""}`}>
             <div>
-              You need at least <strong>{slotsPerDay} active subjects</strong> to fulfill {slotsPerDay} slots per day. Currently you have {activeSubjectsCount} active subject(s). Please activate or create more subjects.
+              <strong>
+                {saved ? "Your month is ready." : "Happy with the rhythm?"}
+              </strong>
+              <p>
+                {saved
+                  ? "This is your saved schedule. Find it any time in Study plans."
+                  : "Saving generates a new random arrangement, so your saved schedule may differ from this preview. Only one plan can be saved per month."}
+              </p>
+            </div>
+            {saved ? (
+              <a
+                className="btn btn-secondary"
+                href={`#/plans/${settings.year}/${settings.month}`}
+              >
+                <Check size={17} />
+                View saved plan
+              </a>
+            ) : (
+              <button
+                className="btn btn-primary"
+                onClick={() => void generate(true)}
+                disabled={
+                  !!busy ||
+                  active.loading ||
+                  !!active.error ||
+                  insufficient ||
+                  past
+                }
+              >
+                <Save size={17} />
+                {busy === "save" ? "Saving…" : "Save monthly plan"}
+              </button>
+            )}
+          </div>
+        </>
+      ) : (
+        <section className="planner-empty">
+          <div className="empty-month" aria-hidden="true">
+            <div>
+              {["M", "T", "W", "T", "F", "S", "S"].map((day, i) => (
+                <span key={i}>{day}</span>
+              ))}
+            </div>
+            <div>
+              {Array.from({ length: 28 }, (_, i) => (
+                <span key={i}>{i + 1}</span>
+              ))}
             </div>
           </div>
-        )}
-
-        {/* Error message */}
-        {error && (
-          <div className="alert alert-error">
-            <AlertCircle size={18} style={{ flexShrink: 0 }} />
-            <div style={{ flex: 1 }}>{error}</div>
-          </div>
-        )}
-
-        {/* Input Form Controls Grid */}
-        <div className="form-grid">
-          <div className="form-group">
-            <label className="form-label" htmlFor="plan-year-select">
-              <Calendar size={16} /> Target Year *
-            </label>
-            <select
-              id="plan-year-select"
-              className="form-select"
-              value={year}
-              onChange={(e) => setYear(Number(e.target.value))}
-            >
-              {yearOptions.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label" htmlFor="plan-month-select">
-              <Calendar size={16} /> Target Month *
-            </label>
-            <select
-              id="plan-month-select"
-              className="form-select"
-              value={month}
-              onChange={(e) => setMonth(Number(e.target.value))}
-            >
-              {monthOptions.map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.label} ({m.value})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label" htmlFor="plan-slots-input">
-              <Sparkles size={16} /> Slots per Day (1..10) *
-            </label>
-            <input
-              id="plan-slots-input"
-              type="number"
-              min={1}
-              max={10}
-              className="form-input"
-              value={slotsPerDay}
-              onChange={(e) => setSlotsPerDay(Math.max(1, Math.min(10, Number(e.target.value))))}
-              required
-            />
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="actions-bar">
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={handlePreview}
-            disabled={isPreviewLoading || isSaveLoading}
-            id="btn-preview-plan"
-          >
-            <Eye size={18} />
-            <span>{isPreviewLoading ? 'Generating Preview...' : 'Preview Proposal'}</span>
-          </button>
-
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={handleSave}
-            disabled={!previewPlan || isSaved || inputsChanged || isSaveLoading || isPreviewLoading}
-            id="btn-save-plan"
-            title={
-              !previewPlan
-                ? 'Generate a preview proposal first'
-                : inputsChanged
-                ? 'Settings changed. Generate a new preview first.'
-                : isSaved
-                ? 'This plan has already been saved'
-                : 'Save this monthly study plan'
-            }
-          >
-            <Save size={18} />
-            <span>
-              {isSaveLoading ? 'Saving Plan...' : isSaved ? 'Plan Saved ✓' : 'Save Plan'}
+          <div>
+            <h2>A little structure starts here.</h2>
+            <p>
+              Choose your month and daily sessions above. Your preview will
+              appear here, ready to explore one day at a time.
+            </p>
+            <span className="small-note">
+              <Info size={16} />
+              Preview first. Save when you’re ready.
             </span>
-          </button>
-        </div>
-      </div>
-
-      {/* Render Schedule Preview Card if present */}
-      {previewPlan && <PlanPreviewCard plan={previewPlan} isSaved={isSaved} />}
-
-      <style>{`
-        .form-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-          gap: 1.25rem;
-          margin-bottom: 1.5rem;
-        }
-
-        .active-subject-badge {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-
-        .actions-bar {
-          display: flex;
-          align-items: center;
-          justify-content: flex-end;
-          gap: 1rem;
-          padding-top: 1.25rem;
-          border-top: 1px solid var(--color-border);
-        }
-
-        @media (max-width: 640px) {
-          .actions-bar {
-            flex-direction: column;
-          }
-          .actions-bar .btn {
-            width: 100%;
-          }
-        }
-      `}</style>
-    </div>
+          </div>
+        </section>
+      )}
+    </>
   );
-};
+}
